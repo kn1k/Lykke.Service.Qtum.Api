@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Lykke.Service.Qtum.Api.Client</name>
+    </assembly>
+    <members>
+        <member name="M:Lykke.Service.Qtum.Api.Client.AutofacExtension.RegisterQtumApiClient(Autofac.ContainerBuilder,Lykke.Service.Qtum.Api.Client.QtumApiServiceClientSettings,System.Func{Lykke.HttpClientGenerator.HttpClientGeneratorBuilder,Lykke.HttpClientGenerator.HttpClientGeneratorBuilder})">
+            <summary>
+            Registers <see cref="!:IQtum.ApiClient"/> in Autofac container using <see cref="!:Qtum.ApiServiceClientSettings"/>.
+            </summary>
+            <param name="builder">Autofac container builder.</param>
+            <param name="settings">Qtum.Api client settings.</param>
+            <param name="builderConfigure">Optional <see cref="T:Lykke.HttpClientGenerator.HttpClientGeneratorBuilder"/> configure handler.</param>
+        </member>
+        <member name="T:Lykke.Service.Qtum.Api.Client.IQtumApiApi">
+            <summary>
+            Qtum.Api client API interface.
+            </summary>
+        </member>
+        <member name="T:Lykke.Service.Qtum.Api.Client.IQtumApiClient">
+            <summary>
+            Qtum.Api client interface.
+            </summary>
+        </member>
+        <member name="P:Lykke.Service.Qtum.Api.Client.IQtumApiClient.Api">
+            <summary>Application Api interface</summary>
+        </member>
+        <member name="T:Lykke.Service.Qtum.Api.Client.QtumApiClient">
+            <summary>
+            Qtum.Api API aggregating interface.
+            </summary>
+        </member>
+        <member name="P:Lykke.Service.Qtum.Api.Client.QtumApiClient.Api">
+            <summary>Inerface to Qtum.Api Api.</summary>
+        </member>
+        <member name="M:Lykke.Service.Qtum.Api.Client.QtumApiClient.#ctor(Lykke.HttpClientGenerator.IHttpClientGenerator)">
+            <summary>C-tor</summary>
+        </member>
+        <member name="T:Lykke.Service.Qtum.Api.Client.QtumApiServiceClientSettings">
+            <summary>
+            Qtum.Api client settings.
+            </summary>
+        </member>
+        <member name="P:Lykke.Service.Qtum.Api.Client.QtumApiServiceClientSettings.ServiceUrl">
+            <summary>Service url.</summary>
+        </member>
+    </members>
+</doc>
