@@ -1,0 +1,31 @@
+QtumApiService:
+    Db:
+        LogsConnString:
+            settings-key: "QtumApiService-LogsConnString"
+            types:
+                - AzureBlobStorage
+                - Tag
+
+        DataConnString:
+            settings-key: "QtumApiService-DataConnString"
+            types:
+                - AzureTableStorage      
+                - Tag
+    NodeAPI:
+        NodeURL:
+            settings-key: "QtumApiService-NodeURL"
+            types:
+                - Tag
+    
+MonitoringServiceClient:
+    MonitoringServiceUrl:
+        settings-key: MonitoringServiceUrl  
+  
+SlackNotifications:
+    AzureQueue:
+        ConnectionString:
+            settings-key: SlackNotificationsConnString
+            types:
+                - AzureTableStorage
+        QueueName: 
+            settings-key: SlackQueueName
