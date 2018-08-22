@@ -3,6 +3,7 @@ using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Services;
 using Lykke.Service.Qtum.Api.Settings;
 using Lykke.SettingsReader;
+using NBitcoin;
 
 namespace Lykke.Service.Qtum.Api.Modules
 {
@@ -19,9 +20,17 @@ namespace Lykke.Service.Qtum.Api.Modules
         {
             // Do not register entire settings in container, pass necessary settings to services which requires them
             
+            // Network setup
+            builder.RegisterInstance(Network.GetNetwork(_appSettings.Nested(s => s.Network).CurrentValue)).As<Network>();
+            
             // Services setup
             builder.RegisterType<AssetService>()
                 .As<IAssetService>();
+            
+            builder.RegisterType<BlockchainService>()
+                .As<IBlockchainService>()
+                .WithParameter("networkType", _appSettings.Nested(s => s.Network).CurrentValue);
+            
         }
     }
 }
