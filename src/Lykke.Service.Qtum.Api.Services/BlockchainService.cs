@@ -24,17 +24,36 @@ namespace Lykke.Service.Qtum.Api.Services
         }
         
         /// <inheritdoc/>
+        public bool IsAddressValid(string address, out Exception exception)
+        {
+            try
+            {
+                exception = null;
+                return BitcoinAddressCreate(address) != null;
+            }
+            catch (Exception e)
+            {
+                exception = e;
+                return false;
+            }
+        }
+        
+        /// <inheritdoc/>
         public bool IsAddressValid(string address)
         {
             try
             {
-                return BitcoinAddress.Create(address, _network) != null;
+                return BitcoinAddressCreate(address) != null;
             }
             catch (Exception e)
             {
                 return false;
             }
+        }
 
+        private BitcoinAddress BitcoinAddressCreate(string address)
+        {
+            return BitcoinAddress.Create(address, _network);
         }
     }
 }

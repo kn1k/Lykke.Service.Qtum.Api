@@ -1,4 +1,5 @@
-﻿using NBitcoin;
+﻿using System;
+using NBitcoin;
 
 namespace Lykke.Service.Qtum.Api.Core.Services
 {
@@ -19,5 +20,13 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Blockchain address</param>
         /// <returns>Is assress valid</returns>
         bool IsAddressValid(string address);
+
+        /// <summary>
+        /// Address validate
+        /// </summary>
+        /// <param name="address">Blockchain address</param>
+        /// <param name="exception">Validate exception</param>
+        /// <returns>Is assress valid</returns>
+        bool IsAddressValid(string address, out Exception exception);
     }
 }

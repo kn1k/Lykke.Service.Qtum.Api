@@ -23,5 +23,11 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             return _assets.FirstOrDefault(x => x.Id.Equals(id));
         }
+        
+        /// <inheritdoc/>
+        public IAsset GetQtumAsset()
+        {
+            return _assets.FirstOrDefault();
+        }
     }
 }
