@@ -4,7 +4,7 @@ using Lykke.Common.Api.Contract.Responses;
 using Lykke.Service.BlockchainApi.Contract.Addresses;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
+using NBitcoin.Qtum;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Lykke.Service.Qtum.Api.Controllers
@@ -47,7 +47,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
         {
             if (_blockchainService.IsAddressValid(address))
             {
-                if (_blockchainService.GetNetwork() == Network.TestNet)
+                if (_blockchainService.GetNetwork() == QtumNetworks.Testnet)
                 {
                     return StatusCode((int) HttpStatusCode.OK,
                         new List<string> {$"https://testnet.qtum.org/address/{address}"});
