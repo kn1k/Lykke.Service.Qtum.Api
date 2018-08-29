@@ -68,6 +68,27 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns><see cref="Task"/></returns>
         Task UpdateBalancesAsync(int pageSize = 10);
        
+        /// <summary>
+        /// Check is address balance exist
+        /// </summary>
+        /// <param name="item">Balance entity</param>
+        /// <returns>true if exist</returns>
+        Task<bool> IsBalanceExistAsync(TBalance item);
+        
+        /// <summary>
+        /// Update address balance
+        /// </summary>
+        /// <param name="item">Balance entity</param>
+        /// <returns>A Task object that represents the asynchronous operation.</returns>
+        Task UpdateBalance(TBalance item);
+
+        /// <summary>
+        /// Save address balance
+        /// </summary>
+        /// <param name="item">Balance entity</param>
+        /// <returns>true if created, false if existed before</returns>
+        Task<bool> AddBalance(TBalance item);
+        
         #endregion
 
     }

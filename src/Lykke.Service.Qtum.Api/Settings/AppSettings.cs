@@ -13,5 +13,7 @@ namespace Lykke.Service.Qtum.Api.Settings
         
         [JsonConverter(typeof(StringEnumConverter))]
         public string Network{ get; set; }
+        
+        public ExternalApi ExternalApi { get; set; }
     }
 }

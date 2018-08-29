@@ -55,6 +55,10 @@ namespace Lykke.Service.Qtum.Api.Modules
             builder.RegisterType<BalanceService<BalanceObservation, AddressBalance>>()
                 .As<IBalanceService<BalanceObservation, AddressBalance>>();
             
+            builder.RegisterType<QtumInsightApi>()
+                .As<IInsightApiService>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
+            
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()
                 .As<IStartable>()
