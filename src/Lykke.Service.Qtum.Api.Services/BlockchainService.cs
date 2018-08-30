@@ -81,7 +81,15 @@ namespace Lykke.Service.Qtum.Api.Services
             var policyResult = _policy.ExecuteAsync(async () =>
             {
                 var result = await _insightApiService.GetUtxo(address);
-                return result.Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
+                if (result.Any())
+                {
+                    return result.Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
+                }
+                else
+                {
+                    return 0;
+                }
+
             });
 
             return await policyResult;
