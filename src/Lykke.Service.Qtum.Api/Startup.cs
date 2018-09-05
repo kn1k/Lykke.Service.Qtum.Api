@@ -17,7 +17,7 @@ namespace Lykke.Service.Qtum.Api
     {
         private readonly LykkeSwaggerOptions _swaggerOptions = new LykkeSwaggerOptions
         {
-            ApiTitle = "Qtum.Api API",
+            ApiTitle = "QtumApi API",
             ApiVersion = "v1"
         };
 
