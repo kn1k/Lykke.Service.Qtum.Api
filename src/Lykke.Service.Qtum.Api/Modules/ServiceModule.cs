@@ -28,11 +28,10 @@ namespace Lykke.Service.Qtum.Api.Modules
             // Services setup
             builder.RegisterType<AssetService>()
                 .As<IAssetService>();
-            
+
             builder.RegisterType<BlockchainService>()
-                .As<IBlockchainService>()
-                .WithParameter("networkType", _appSettings.Nested(s => s.Network).CurrentValue);
-            
+                .As<IBlockchainService>();
+
         }
     }
 }
