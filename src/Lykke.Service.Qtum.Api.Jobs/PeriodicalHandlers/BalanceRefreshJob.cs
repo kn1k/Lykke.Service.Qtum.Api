@@ -6,7 +6,7 @@ using Lykke.Common.Log;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Balances;
 using Lykke.Service.Qtum.Api.Core.Services;
 
-namespace Lykke.Service.Qtum.Jobs.PeriodicalHandlers
+namespace Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers
 {
     public class BalanceRefreshJob: TimerPeriod
     {
