@@ -17,6 +17,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
@@ -31,9 +34,6 @@
     <ProjectReference Include="..\Lykke.Service.Qtum.Api.AzureRepositories\Lykke.Service.Qtum.Api.AzureRepositories.csproj" />
     <ProjectReference Include="..\Lykke.Service.Qtum.Api.Core\Lykke.Service.Qtum.Api.Core.csproj" />
     <ProjectReference Include="..\Lykke.Service.Qtum.Api.Services\Lykke.Service.Qtum.Api.Services.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>

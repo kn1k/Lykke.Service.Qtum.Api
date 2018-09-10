@@ -7,7 +7,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Lykke.Service.Qtum.Api.Controllers
 {
-[Route("api/[controller]")]
+    [Route("api/[controller]")]
     public class ConstantsController : Controller
     {        
         /// <summary>
