@@ -51,4 +51,12 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>Balance for address</returns>
         Task<BigInteger> GetAddressBalanceAsync(BitcoinAddress address);
     }
+    
+    public enum TransactionType
+    {
+        open,
+        receive,
+        send,
+        change
+    }
 }

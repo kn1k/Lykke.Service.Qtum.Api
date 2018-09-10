@@ -34,7 +34,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         
         #endregion
 
-
         #region Balance
         
         /// <summary>
