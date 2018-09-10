@@ -1,6 +1,6 @@
 ﻿using Lykke.SettingsReader.Attributes;
 
-namespace Lykke.Service.Qtum.Api.Settings
+namespace Lykke.Service.Qtum.Api.Jobs.Settings
 {
     public class DbSettings
     {

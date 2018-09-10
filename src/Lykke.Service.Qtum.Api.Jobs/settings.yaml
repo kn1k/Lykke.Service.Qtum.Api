@@ -1,4 +1,4 @@
-QtumApiService:
+QtumApiJobs:
     Db:
         LogsConnString:
             settings-key: "QtumApiService-LogsConnString"

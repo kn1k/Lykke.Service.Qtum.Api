@@ -9,6 +9,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Lykke.Service.Qtum.Api.Controllers
 {
+    [Route("api/[controller]")]
     public class AddressesController : Controller
     {
         private readonly IBlockchainService _blockchainService;

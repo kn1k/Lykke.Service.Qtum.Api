@@ -22,6 +22,12 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="id">Asset id</param>
         /// <returns>Asset <see cref="IAsset"/></returns>
         IAsset GetAsset(string id);
+        
+        /// <summary>
+        /// Get Qtum asset
+        /// </summary>
+        /// <returns>Asset <see cref="IAsset"/></returns>
+        IAsset GetQtumAsset();
 
     }
 }
