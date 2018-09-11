@@ -132,19 +132,8 @@ namespace Lykke.Service.Qtum.Api.Services
                             {
                                 txMeta.State = TransactionState.Confirmed;
                                 txMeta.Hash = txInfo.Blockhash;
-//                                AddressOperationHistoryEntry operationHistoryEntry = new AddressOperationHistoryEntry
-//                                {
-//                                    OperationId = transactionObservation.OperationId,
-//                                    Hash = broadcactResult.hash,
-//                                    Address = address,
-//                                    Type = txMeta.TransactionType == TransactionType.send
-//                                        ? AddressObservationType.From
-//                                        : AddressObservationType.To,
-//                                    TransactionTimestamp = DateTime.Now
-//                                };
                                 txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
                                 txMeta.BlockCount = txInfo.Blockheight;
-//                                await _historyService.AddAddressOperationHistoryAsync(operationHistoryEntry);
                             }
                             else
                             {
@@ -152,7 +141,7 @@ namespace Lykke.Service.Qtum.Api.Services
                                 txMeta.State = TransactionState.Failed;
                             }
                         }
-
+                        
                         await UpdateTransactionMeta(txMeta);
                     }
                 }
