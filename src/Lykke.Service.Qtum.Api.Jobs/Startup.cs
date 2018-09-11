@@ -31,7 +31,7 @@ namespace Lykke.Service.Qtum.Api.Jobs
                 options.Logs = logs =>
                 {
                     logs.AzureTableName = "QtumApiJobsLog";
-                    logs.AzureTableConnectionStringResolver = settings => settings.QtumApiJobsService.Db.LogsConnString;
+                    logs.AzureTableConnectionStringResolver = settings => settings.QtumApiService.Db.LogsConnString;
 
                     // TODO: You could add extended logging configuration here:
                     /* 
