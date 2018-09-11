@@ -8,7 +8,7 @@ namespace Lykke.Service.Qtum.Api.Jobs.Settings
     [UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
     public class AppSettings : BaseAppSettings
     {
-        public QtumApiJobsSettings QtumApiJobsService { get; set; }
+        public QtumApiJobsSettings QtumApiService { get; set; }
         
         [JsonConverter(typeof(StringEnumConverter))]
         public string Network{ get; set; }
