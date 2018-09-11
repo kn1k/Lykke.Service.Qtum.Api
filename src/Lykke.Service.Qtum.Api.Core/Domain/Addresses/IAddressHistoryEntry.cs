@@ -23,12 +23,9 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.Addresses
         AddressObservationType Type { get; set; }
     }
 
-    // TODO: (nkataev) check this enum
     public enum TransactionType
     {
-        open,
         receive,
         send,
-        change
     }
 }
