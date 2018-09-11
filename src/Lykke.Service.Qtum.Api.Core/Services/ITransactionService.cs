@@ -17,6 +17,12 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>true if publish, false if already publish</returns>
         Task<bool> BroadcastSignedTransactionAsync(Guid operationId, string signedTransaction);
 
+        /// <summary>
+        /// Broadcast transactions to network
+        /// </summary>
+        /// <param name="minConfirmations">Min confirmation count to transaction complete</param>
+        /// <param name="pageSize">Update page size</param>
+        /// <returns><see cref="Task"/></returns>
         Task BroadcastSignedTransactionsAsync(long minConfirmations = 1, int pageSize = 10);
         
         /// <summary>

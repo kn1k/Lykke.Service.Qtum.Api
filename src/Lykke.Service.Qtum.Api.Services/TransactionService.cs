@@ -41,7 +41,7 @@ namespace Lykke.Service.Qtum.Api.Services
         /// </summary>
         /// <param name="operationId">Operation Id</param>
         /// <returns>Transaction body</returns>
-        public async Task<TTransactionBody> GetTransactionBodyByIdAsync(Guid operationId)
+        private async Task<TTransactionBody> GetTransactionBodyByIdAsync(Guid operationId)
         {
             return await _transactionBodyRepository.GetAsync(operationId.ToString());
         }
@@ -98,6 +98,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return true;
         }
 
+        /// <inheritdoc/>
         public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 1, int pageSize = 10)
         {
             (string continuation, IEnumerable<TTransactionObservation> items) transactionObservations;

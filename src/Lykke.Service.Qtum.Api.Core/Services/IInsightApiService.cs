@@ -28,6 +28,11 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns></returns>
         Task<(ITxId txId, IErrorResponse error)> TxSendAsync(IRawTx rawtx);
         
+        /// <summary>
+        /// Get transaction info by id
+        /// </summary>
+        /// <param name="txId">Transaction id</param>
+        /// <returns><see cref="ITxInfo"/></returns>
         Task<ITxInfo> GetTxByIdAsync(ITxId txId);
     }
 }

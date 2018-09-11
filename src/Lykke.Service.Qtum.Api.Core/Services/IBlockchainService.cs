@@ -59,6 +59,11 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>Broadcast result (txId or error)</returns>
         Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction);
 
+        /// <summary>
+        /// Get transaction info by id
+        /// </summary>
+        /// <param name="id">Transaction id</param>
+        /// <returns><see cref="ITxInfo"/></returns>
         Task<ITxInfo> GetTransactionInfoByIdAsync(string id);
     }
     

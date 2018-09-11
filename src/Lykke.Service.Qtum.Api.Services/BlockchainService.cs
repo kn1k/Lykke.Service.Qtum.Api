@@ -97,6 +97,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return await policyResult;
         }
 
+        /// <inheritdoc/>
         public async Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction)
         {
             var policyResult = _policy.ExecuteAsync(async () =>
@@ -108,6 +109,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return await policyResult;
         }
 
+        /// <inheritdoc/>
         public async Task<ITxInfo> GetTransactionInfoByIdAsync(string id)
         {
             var policyResult = _policy.ExecuteAsync(async () =>
