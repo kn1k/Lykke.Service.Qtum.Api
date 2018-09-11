@@ -42,11 +42,11 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             // Repositories setup
             builder.RegisterType<BalanceObservationRepository>()
                 .As<IBalanceObservationRepository<BalanceObservation>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
             
             builder.RegisterType<AddressBalanceRepository>()
                 .As<IAddressBalanceRepository<AddressBalance>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
             
             builder.RegisterType<TransactionBodyRepository>()
                 .As<ITransactionBodyRepository<TransactionBody>>()
