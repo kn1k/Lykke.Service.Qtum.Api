@@ -26,7 +26,8 @@ namespace Lykke.Service.Qtum.Api.Services
         public TransactionService(ILogFactory logFactory,
             ITransactionBodyRepository<TTransactionBody> transactionBodyRepository,
             ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository,
-            ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository, IBlockchainService blockchainService)
+            ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository,
+            IBlockchainService blockchainService)
         {
             _transactionBodyRepository = transactionBodyRepository;
             _transactionMetaRepository = transactionMetaRepository;
@@ -97,7 +98,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return true;
         }
 
-        public async Task BroadcastSignedTransactionsAsync(int pageSize = 10)
+        public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 1, int pageSize = 10)
         {
             (string continuation, IEnumerable<TTransactionObservation> items) transactionObservations;
             string continuation = null;
@@ -126,26 +127,31 @@ namespace Lykke.Service.Qtum.Api.Services
                         }
                         else
                         {
-                            var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(broadcactResult.txId);
-
-                            if (txInfo != null)
-                            {
-                                txMeta.State = TransactionState.Confirmed;
-                                txMeta.Hash = txInfo.Blockhash;
-                                txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
-                                txMeta.BlockCount = txInfo.Blockheight;
-                            }
-                            else
-                            {
-                                txMeta.Error = $"Tx not found by id :{broadcactResult.txId}";
-                                txMeta.State = TransactionState.Failed;
-                            }
+                            txMeta.TxId = broadcactResult.txId;
                         }
-                        
-                        await UpdateTransactionMeta(txMeta);
                     }
+
+                    var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                    if (txInfo != null)
+                    {
+                        if (txInfo.Confirmations > minConfirmations)
+                        {
+                            txMeta.State = TransactionState.Confirmed;
+                            txMeta.Hash = txInfo.Blockhash;
+                            txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                            txMeta.BlockCount = txInfo.Blockheight;
+                        }
+                    }
+                    else
+                    {
+                        txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                        txMeta.State = TransactionState.Failed;
+                    }
+
+                    await UpdateTransactionMeta(txMeta);
                 }
-                
+
                 continuation = transactionObservations.continuation;
             } while (continuation != null);
         }
@@ -187,9 +193,21 @@ namespace Lykke.Service.Qtum.Api.Services
         /// </summary>
         /// <param name="id">Operation Id</param>
         /// <returns>Transaction meta</returns>
-        private async Task<TTransactionMeta> GetTransactionMetaAsync(string id)
+        public async Task<TTransactionMeta> GetTransactionMetaAsync(string id)
         {
             return await _transactionMetaRepository.GetAsync(id);
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> IsTransactionObservedAsync(TTransactionObservation transactionObservation)
+        {
+            return await _transactionObservationRepository.IsExistAsync(transactionObservation);
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation)
+        {
+            return await _transactionObservationRepository.DeleteIfExistAsync(transactionObservation);
         }
 
         /// <summary>
@@ -211,7 +229,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             return await _transactionObservationRepository.CreateIfNotExistsAsync(transactionObservation);
         }
-        
+
         /// <summary>
         /// Get observed transaction
         /// </summary>

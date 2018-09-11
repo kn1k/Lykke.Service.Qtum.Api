@@ -17,6 +17,27 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>true if publish, false if already publish</returns>
         Task<bool> BroadcastSignedTransactionAsync(Guid operationId, string signedTransaction);
 
-        Task BroadcastSignedTransactionsAsync(int pageSize = 10);
+        Task BroadcastSignedTransactionsAsync(long minConfirmations = 1, int pageSize = 10);
+        
+        /// <summary>
+        /// Get transaction meta by operation Id
+        /// </summary>
+        /// <param name="id">Operation Id</param>
+        /// <returns>Transaction meta</returns>
+        Task<TTransactionMeta> GetTransactionMetaAsync(string id);
+        
+        /// <summary>
+        /// Check is transaction already observed
+        /// </summary>
+        /// <param name="transactionObservation">Transaction observation</param>
+        /// <returns>true if already observed</returns>
+        Task<bool> IsTransactionObservedAsync(TTransactionObservation transactionObservation);
+        
+        /// <summary>
+        /// Stop observe trancaction
+        /// </summary>
+        /// <param name="transactionObservation"></param>
+        /// <returns>A Task object that represents the asynchronous operation</returns>
+        Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation);
     }
 }

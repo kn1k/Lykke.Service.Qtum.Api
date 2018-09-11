@@ -73,6 +73,25 @@ namespace Lykke.Service.Qtum.Api.Helpers
             return true;
         }
         
+        public static bool IsValidOperationIdParameter(this ModelStateDictionary self, string operationId)
+        {
+            if (operationId == null)
+            {
+                self.AddModelError(nameof(operationId), "Can't be null");
+
+                return false;
+            }
+
+            if (!Guid.TryParse(operationId, out var operationIdGuid))
+            {
+                self.AddModelError(nameof(operationId), "Invalid");
+
+                return false;
+            }
+
+            return true;
+        }
+        
         /// <summary>
         /// Cast Validation information to Lykke error response
         /// </summary>

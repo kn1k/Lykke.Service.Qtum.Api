@@ -27,6 +27,10 @@ namespace Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions
         public string Error { get; set; }
 
         public string Hash { get; set; }
+        
+        public string TxId { get; set; }
+        
+        public string Fee { get; set; }
 
         public DateTime? CreateTimestamp { get; set; }
 
