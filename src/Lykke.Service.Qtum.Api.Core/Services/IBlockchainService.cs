@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
 using NBitcoin;
 
 namespace Lykke.Service.Qtum.Api.Core.Services
@@ -50,6 +51,15 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address</param>
         /// <returns>Balance for address</returns>
         Task<BigInteger> GetAddressBalanceAsync(BitcoinAddress address);
+        
+        /// <summary>
+        /// Broadcast transaction to network
+        /// </summary>
+        /// <param name="signedTransaction">Signed transaction</param>
+        /// <returns>Broadcast result (txId or error)</returns>
+        Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction);
+
+        Task<ITxInfo> GetTransactionInfoByIdAsync(string id);
     }
     
     public enum TransactionType

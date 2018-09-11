@@ -1,9 +1,12 @@
 ﻿using System;
 using Autofac;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Balances;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Balances;
+using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Helpers;
 using Lykke.Service.Qtum.Api.Core.Repositories.Balances;
+using Lykke.Service.Qtum.Api.Core.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers;
 using Lykke.Service.Qtum.Api.Jobs.Settings;
@@ -45,6 +48,18 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                 .As<IAddressBalanceRepository<AddressBalance>>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
             
+            builder.RegisterType<TransactionBodyRepository>()
+                .As<ITransactionBodyRepository<TransactionBody>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+
+            builder.RegisterType<TransactionMetaRepository>()
+                .As<ITransactionMetaRepository<TransactionMeta>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+
+            builder.RegisterType<TransactionObservationRepository>()
+                .As<ITransactionObservationRepository<TransactionObservation>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+            
             // Services setup
             builder.RegisterType<AssetService>()
                 .As<IAssetService>()
@@ -60,9 +75,17 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             builder.RegisterType<QtumInsightApi>()
                 .As<IInsightApiService>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
+            
+            builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation>>()
+                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>>();
                         
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()
+                .As<IStartable>()
+                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
+                .SingleInstance();
+            
+            builder.RegisterType<BroadcastJob>()
                 .As<IStartable>()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();

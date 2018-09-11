@@ -8,6 +8,7 @@ using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
+using Lykke.Service.Qtum.Api.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -23,9 +24,10 @@ namespace Lykke.Service.Qtum.Api.Controllers
         private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>
             _transactionService;
 
-        public TransactionsController(ILogFactory logFactory, IBlockchainService blockchainService)
+        public TransactionsController(ILogFactory logFactory, IBlockchainService blockchainService, ITransactionService<TransactionBody, TransactionMeta, TransactionObservation> transactionService)
         {
             _blockchainService = blockchainService;
+            _transactionService = transactionService;
             _log = logFactory.CreateLog(this);
         }
 
@@ -96,7 +98,25 @@ namespace Lykke.Service.Qtum.Api.Controllers
         public async Task<IActionResult> BroadcastSignedTransactionAsync(
             [FromBody] BroadcastTransactionRequest broadcastTransactionRequest)
         {
-            return StatusCode((int) HttpStatusCode.NotImplemented);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.ToErrorResponse("Transaction invalid"));
+            }
+
+            var result = await _transactionService.BroadcastSignedTransactionAsync(
+                broadcastTransactionRequest.OperationId, broadcastTransactionRequest.SignedTransaction);
+
+            if (!result)
+            {
+                return StatusCode((int) HttpStatusCode.Conflict,
+                    ErrorResponse.Create(
+                        "Transaction with specified operationId and signedTransaction has already been broadcasted"));
+            }
+
+            _log.Info(nameof(BroadcastSignedTransactionAsync),
+                JObject.FromObject(broadcastTransactionRequest).ToString(),
+                $"Transaction broadcasted {broadcastTransactionRequest.OperationId}");
+            return Ok();
         }
 
         /// <summary>
@@ -105,7 +125,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
         /// <param name="operationId">Operation Id</param>
         /// <returns>Broadcasted transaction response</returns>
         [HttpGet("broadcast/many-inputs/{operationId}")]
-        [HttpGet("broadcast/many-inputs/")]
         [SwaggerOperation("GetBroadcastedManyInputsTransaction")]
         [ProducesResponseType(typeof(BroadcastedTransactionWithManyInputsResponse), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
@@ -123,7 +142,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
         /// <param name="operationId">Operation Id</param>
         /// <returns>Broadcasted transaction response</returns>
         [HttpGet("broadcast/many-outputs/{operationId}")]
-        [HttpGet("broadcast/many-outputs/")]
         [SwaggerOperation("GetBroadcastedManyOutputsTransaction")]
         [ProducesResponseType(typeof(BroadcastedTransactionWithManyOutputsResponse), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
@@ -143,7 +161,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
         /// <param name="operationId">Operation Id</param>
         /// <returns>Broadcasted transaction response</returns>
         [HttpGet("broadcast/single/{operationId}")]
-        [HttpGet("broadcast/single/")]
         [SwaggerOperation("GetBroadcastedSingleTransaction")]
         [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
@@ -158,7 +175,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
         /// <param name="operationId">Operation Id</param>
         /// <returns>HttpStatusCode</returns>
         [HttpDelete("broadcast/{operationId}")]
-        [HttpDelete("broadcast/")]
         [SwaggerOperation("DeleteBroadcastedTransaction")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]

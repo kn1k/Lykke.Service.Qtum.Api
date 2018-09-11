@@ -12,13 +12,22 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// Get insight api status
         /// </summary>
         /// <returns>Status <see cref="IStatus"/></returns>
-        Task<IStatus> GetStatus();
+        Task<IStatus> GetStatusAsync();
         
         /// <summary>
         /// Get address utxo
         /// </summary>
         /// <param name="address">Address <see cref="BitcoinAddress"/></param>
         /// <returns>Address utxo list <see cref="IUtxo"/></returns>
-        Task<List<IUtxo>> GetUtxo(BitcoinAddress address);
+        Task<List<IUtxo>> GetUtxoAsync(BitcoinAddress address);
+        
+        /// <summary>
+        /// Transaction broadcasting
+        /// </summary>
+        /// <param name="rawtx">Signed transaction as hex string</param>
+        /// <returns></returns>
+        Task<(ITxId txId, IErrorResponse error)> TxSendAsync(IRawTx rawtx);
+        
+        Task<ITxInfo> GetTxByIdAsync(ITxId txId);
     }
 }

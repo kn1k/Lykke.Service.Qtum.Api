@@ -4,7 +4,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Numerics;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
 using Lykke.Service.Qtum.Api.Core.Services;
+using Lykke.Service.Qtum.Api.Services.InsightApi;
 using NBitcoin;
 
 using Polly;
@@ -68,7 +70,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetStatus();
+                var result = await _insightApiService.GetStatusAsync();
                 return result.Info.Blocks;
             });
 
@@ -80,7 +82,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetUtxo(address);
+                var result = await _insightApiService.GetUtxoAsync(address);
                 if (result.Any())
                 {
                     return result.Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
@@ -90,6 +92,28 @@ namespace Lykke.Service.Qtum.Api.Services
                     return 0;
                 }
 
+            });
+
+            return await policyResult;
+        }
+
+        public async Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction)
+        {
+            var policyResult = _policy.ExecuteAsync(async () =>
+            {
+                var result = await _insightApiService.TxSendAsync(new RawTx { rawtx = signedTransaction}); 
+                return (result.txId?.txid, result.error?.error);                          
+            });
+
+            return await policyResult;
+        }
+
+        public async Task<ITxInfo> GetTransactionInfoByIdAsync(string id)
+        {
+            var policyResult = _policy.ExecuteAsync(async () =>
+            {
+                var result = await _insightApiService.GetTxByIdAsync(new TxId { txid = id}); 
+                return result;                          
             });
 
             return await policyResult;
