@@ -1,7 +1,4 @@
 ﻿using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs
 {
@@ -10,8 +7,8 @@ namespace Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs
         public string Txid { get; set; }
         public int Version { get; set; }
         public int Locktime { get; set; }
-        public Vin[] Vin { get; set; }
-        public Vout[] Vout { get; set; }
+        public IVin[] Vin { get; set; }
+        public IVout[] Vout { get; set; }
         public string Blockhash { get; set; }
         public int Blockheight { get; set; }
         public int Confirmations { get; set; }

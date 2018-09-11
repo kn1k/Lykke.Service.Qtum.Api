@@ -1,37 +1,34 @@
-﻿using Lykke.Service.Qtum.Api.Core.Domain.Addresses;
+﻿using Common.Log;
+using Lykke.Common.Log;
+using Lykke.Service.Qtum.Api.Core.Domain.Addresses;
 using Lykke.Service.Qtum.Api.Core.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.Core.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Lykke.Service.Qtum.Api.Services
 {
-    public class HistoryService<TAddressHistory, TAddressObservation, TAddressOperation> : IHistoryService<TAddressHistory, TAddressObservation, TAddressOperation>
+    public class HistoryService<TAddressHistory, TAddressObservation> : IHistoryService<TAddressHistory, TAddressObservation>
         where TAddressHistory : IAddressHistoryEntry
         where TAddressObservation : IAddressObservation
-        where TAddressOperation : IAddressOperationHistoryEntry
     {
         private readonly IAddressHistoryEntryRepository<TAddressHistory> _addressHistoryEntryRepository;
         private readonly IAddressObservationRepository<TAddressObservation> _addressObservationRepository;
-        private readonly IAddressOperationHistoryEntryRepository<TAddressOperation> _addressOperationHistoryEntryRepository;
+        private readonly ILog _log;
 
-        public HistoryService(IAddressHistoryEntryRepository<TAddressHistory> addressHistoryEntryRepository, IAddressObservationRepository<TAddressObservation> addressObservationRepository, IAddressOperationHistoryEntryRepository<TAddressOperation> addressOperationHistoryEntryRepository)
+        public HistoryService(ILogFactory logFactory, IAddressHistoryEntryRepository<TAddressHistory> addressHistoryEntryRepository, IAddressObservationRepository<TAddressObservation> addressObservationRepository)
         {
             _addressHistoryEntryRepository = addressHistoryEntryRepository;
             _addressObservationRepository = addressObservationRepository;
-            _addressOperationHistoryEntryRepository = addressOperationHistoryEntryRepository;
+            _log = logFactory.CreateLog(this);
         }
 
         public async Task<bool> AddAddressObservationAsync(TAddressObservation addressObservation)
         {
             return await _addressObservationRepository.CreateIfNotExistsAsync(addressObservation);
-        }
-
-        public Task<bool> AddAddressOperationHistoryAsync(TAddressOperation operationHistoryEntry)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<(string continuation, IEnumerable<TAddressHistory> items)> GetAddressHistoryAsync(int take, string partitionKey, string address, string afterHash = null, string continuation = null)
@@ -56,14 +53,9 @@ namespace Lykke.Service.Qtum.Api.Services
             }
         }
 
-        public Task<(string continuation, IEnumerable<TAddressObservation> items)> GetAddressObservationAsync(int pageSize, string continuation = null, string partitionKey = null)
+        public async Task<(string continuation, IEnumerable<TAddressObservation> items)> GetAddressObservationAsync(int pageSize, string continuation = null, string partitionKey = null)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IEnumerable<TAddressOperation>> GetAddressOperationHistoryAsync(int take, string partitionKey, string address)
-        {
-            return await _addressOperationHistoryEntryRepository.GetByAddressAsync(take, partitionKey, address);
+            return await _addressObservationRepository.GetAsync(pageSize, continuation, partitionKey);
         }
 
         public Task<(string continuation, IEnumerable<TAddressHistory> items)> GetAddressPendingHistoryAsync(int take, string continuation = null)
@@ -94,6 +86,35 @@ namespace Lykke.Service.Qtum.Api.Services
         public async Task<bool> RemoveAddressObservationAsync(TAddressObservation addressObservation)
         {
             return await _addressObservationRepository.DeleteIfExistAsync(addressObservation);
+        }
+
+        public async Task UpdateObservedAddressHistoryAsync(int pageSize = 10)
+        {
+            (string continuation, IEnumerable<TAddressObservation> items) addressObservation;
+            string continuation = null;
+
+            do
+            {
+                addressObservation = await GetAddressObservationAsync(pageSize, continuation);
+
+                if (addressObservation.items.Any())
+                {
+                    continuation = addressObservation.continuation;
+
+                    foreach (var observedAddress in addressObservation.items)
+                    {
+                        try
+                        {
+                            // blockchainService - InsightAPI addr / txs
+                        }
+                        catch (Exception e)
+                        {
+                            _log.Error(e, $"Exception while getting transactions history for address {observedAddress.Address}");
+                        }
+                    }
+                }
+
+            } while (continuation != null);
         }
     }
 }

@@ -9,8 +9,8 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs
         string Txid { get; set; }
         int Version { get; set; }
         int Locktime { get; set; }
-        Vin[] Vin { get; set; }
-        Vout[] Vout { get; set; }
+        IVin[] Vin { get; set; }
+        IVout[] Vout { get; set; }
         string Blockhash { get; set; }
         int Blockheight { get; set; }
         int Confirmations { get; set; }

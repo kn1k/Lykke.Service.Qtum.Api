@@ -1,7 +1,4 @@
 ﻿using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs
 {
@@ -15,6 +12,6 @@ namespace Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs
         public string Addr { get; set; }
         public long ValueSat { get; set; }
         public float Value { get; set; }
-        public object DoubleSpentTxID { get; set; }
+        public string DoubleSpentTxID { get; set; }
     }
 }

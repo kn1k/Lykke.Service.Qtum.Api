@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Lykke.Service.Qtum.Api.Core.Services
 {
-    public interface IHistoryService<TAddressHistory, TAddressObservation, TAddressOperation>
+    public interface IHistoryService<TAddressHistory, TAddressObservation>
     {
         /// <summary>
         /// Check is address history already observed
@@ -62,22 +62,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         Task<bool> InsertAddressHistoryAsync(TAddressHistory addressHistoryEntry);
 
         /// <summary>
-        /// Get operation history
-        /// </summary>
-        /// <param name="take"></param>
-        /// <param name="partitionKey"></param>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        Task<IEnumerable<TAddressOperation>> GetAddressOperationHistoryAsync(int take, string partitionKey, string address);
-
-        /// <summary>
-        /// Save operation history entry
-        /// </summary>
-        /// <param name="operationHistoryEntry">Operation history entry</param>
-        /// <returns>true if created, false if existed before</returns>
-        Task<bool> AddAddressOperationHistoryAsync(TAddressOperation operationHistoryEntry);
-
-        /// <summary>
         /// Get pending blocks from history
         /// </summary>
         /// <param name="take">Amount of history entries</param>
@@ -91,5 +75,12 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="addressHistoryEntry">Address history entry</param>
         /// <returns>true if removed, false if not exist</returns>
         Task<bool> RemoveAddressHistoryEntryAsync(TAddressHistory addressHistoryEntry);
+
+        /// <summary>
+        /// Update observed addresses history
+        /// </summary>
+        /// <param name="pageSize">Update page size</param>
+        /// <returns></returns>
+        Task UpdateObservedAddressHistoryAsync(int pageSize = 10);
     }
 }

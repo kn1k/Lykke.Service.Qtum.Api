@@ -16,21 +16,19 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-using TransactionType = Lykke.Service.Qtum.Api.Core.Domain.Addresses.TransactionType;
-
 namespace Lykke.Service.Qtum.Api.Controllers
 {
     [Route("api/transactions/[controller]")]
     public class HistoryController : Controller
     {
-        private readonly IHistoryService<AddressHistoryEntry, AddressObservation, AddressOperationHistoryEntry> _historyService;
+        private readonly IHistoryService<AddressHistoryEntry, AddressObservation> _historyService;
 
         private readonly IAssetService _assetService;
         private readonly IBlockchainService _blockchainService;
         private readonly ILog _log;
 
         public HistoryController(
-            IHistoryService<AddressHistoryEntry, AddressObservation, AddressOperationHistoryEntry> historyService,
+            IHistoryService<AddressHistoryEntry, AddressObservation> historyService,
             IAssetService assetService, IBlockchainService blockchainService, ILogFactory log)
         {
             _historyService = historyService;
@@ -59,7 +57,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 };
                 if (!await _historyService.IsAddressObservedAsync(addressObservation) && await _historyService.AddAddressObservationAsync(addressObservation))
                 {
-                    //await _log.WriteInfoAsync(nameof(AddHistoryObservationFromAsync), JObject.FromObject(addressObservation).ToString(), $"Start observing balance for {address}");
                     _log.Info(nameof(AddHistoryObservationFromAsync), $"Start observing history from {address}", JObject.FromObject(addressObservation).ToString());
                     
                     return Ok();
@@ -96,8 +93,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 if (!await _historyService.IsAddressObservedAsync(addressObservation) &&
                     await _historyService.AddAddressObservationAsync(addressObservation))
                 {
-                    //await _log.WriteInfoAsync(nameof(AddHistoryObservationToAsync),
-                    //    JObject.FromObject(addressObservation).ToString(), $"Start observe history to {address}");
                     _log.Info(nameof(AddHistoryObservationToAsync), $"Start observing history to {address}", JObject.FromObject(addressObservation).ToString());
 
                     return Ok();
@@ -127,8 +122,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
         {
             var history = await _historyService.GetAddressHistoryAsync(take,
                 Enum.GetName(typeof(AddressObservationType), AddressObservationType.From), address, afterHash);
-            var internalHistory = await _historyService.GetAddressOperationHistoryAsync(take,
-                Enum.GetName(typeof(AddressObservationType), AddressObservationType.From), address);
 
             return history.items?.OrderByDescending(x => x.BlockCount).Select(x => new HistoricalTransactionContract
             {
@@ -137,19 +130,10 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 FromAddress = x.FromAddress,
                 ToAddress = x.ToAddress,
                 Hash = x.Hash,
-                TransactionType = x.TransactionType == TransactionType.send
+                Timestamp = x.TransactionTimestamp.Value,
+                TransactionType = x.TransactionType == Core.Services.TransactionType.send
                     ? BlockchainApi.Contract.Transactions.TransactionType.Send
                     : BlockchainApi.Contract.Transactions.TransactionType.Receive
-            }).Select(x =>
-            {
-                var operationHistory = internalHistory.FirstOrDefault(y => y.Hash == x.Hash);
-
-                if (operationHistory != null)
-                {
-                    x.Timestamp = operationHistory.TransactionTimestamp;
-                }
-
-                return x;
             });
         }
 
@@ -163,42 +147,24 @@ namespace Lykke.Service.Qtum.Api.Controllers
         [HttpGet("to/{address}")]
         [SwaggerOperation("GetHistoryTo")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTransactionContract>), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> GetHistoryToAsync(string address, [FromQuery] string take,
+        public async Task<IEnumerable<HistoricalTransactionContract>> GetHistoryToAsync(string address, [FromQuery] int take,
             [FromQuery] string afterHash = null)
         {
-            if (int.TryParse(take, out var takeParsed) && take != null)
-            {
-                var history = await _historyService.GetAddressHistoryAsync(takeParsed,
-                    Enum.GetName(typeof(AddressObservationType), AddressObservationType.To), address, afterHash);
-                var internalHistory = await _historyService.GetAddressOperationHistoryAsync(takeParsed,
-                    Enum.GetName(typeof(AddressObservationType), AddressObservationType.To), address);
-                return StatusCode((int)HttpStatusCode.OK, history.items?.OrderByDescending(x => x.BlockCount).Select(
-                    x => new HistoricalTransactionContract
-                    {
-                        Amount = x.Amount,
-                        AssetId = _assetService.GetQtumAsset().Id,
-                        FromAddress = x.FromAddress,
-                        ToAddress = x.ToAddress,
-                        Hash = x.Hash,
-                        TransactionType = x.TransactionType == TransactionType.send
-                            ? BlockchainApi.Contract.Transactions.TransactionType.Send
-                            : BlockchainApi.Contract.Transactions.TransactionType.Receive
-                    }).Select(x =>
-                    {
-                        var operationHistory = internalHistory.FirstOrDefault(y => y.Hash == x.Hash);
-
-                        if (operationHistory != null)
-                        {
-                            x.Timestamp = operationHistory.TransactionTimestamp;
-                        }
-
-                        return x;
-                    }));
-            }
-            else
-            {
-                return StatusCode((int)HttpStatusCode.BadRequest, ErrorResponse.Create("Invalid params"));
-            }
+            var history = await _historyService.GetAddressHistoryAsync(take,
+                Enum.GetName(typeof(AddressObservationType), AddressObservationType.To), address, afterHash);
+            return history.items?.OrderByDescending(x => x.BlockCount).Select(
+                x => new HistoricalTransactionContract
+                {
+                    Amount = x.Amount,
+                    AssetId = _assetService.GetQtumAsset().Id,
+                    FromAddress = x.FromAddress,
+                    ToAddress = x.ToAddress,
+                    Hash = x.Hash,
+                    Timestamp = x.TransactionTimestamp.Value,
+                    TransactionType = x.TransactionType == Core.Services.TransactionType.send
+                        ? BlockchainApi.Contract.Transactions.TransactionType.Send
+                        : BlockchainApi.Contract.Transactions.TransactionType.Receive
+                });
         }
 
         /// <summary>

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs
+﻿namespace Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs
 {
     public interface IVin
     {
@@ -14,6 +10,6 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs
         string Addr { get; set; }
         long ValueSat { get; set; }
         float Value { get; set; }
-        object DoubleSpentTxID { get; set; }
+        string DoubleSpentTxID { get; set; }
     }
 }

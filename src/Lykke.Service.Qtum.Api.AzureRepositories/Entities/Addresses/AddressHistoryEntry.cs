@@ -1,5 +1,6 @@
 ﻿using Lykke.AzureStorage.Tables;
 using Lykke.Service.Qtum.Api.Core.Domain.Addresses;
+using Lykke.Service.Qtum.Api.Core.Services;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;

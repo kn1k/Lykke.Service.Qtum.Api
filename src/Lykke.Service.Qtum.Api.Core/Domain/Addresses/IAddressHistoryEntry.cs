@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lykke.Service.Qtum.Api.Core.Services;
+using System;
 
 namespace Lykke.Service.Qtum.Api.Core.Domain.Addresses
 {
@@ -21,11 +22,5 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.Addresses
         TransactionType TransactionType { get; set; }
 
         AddressObservationType Type { get; set; }
-    }
-
-    public enum TransactionType
-    {
-        receive,
-        send,
     }
 }

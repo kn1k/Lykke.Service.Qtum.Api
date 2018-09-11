@@ -1,9 +1,12 @@
 ﻿using Autofac;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Balances;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
+using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Balances;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Helpers;
+using Lykke.Service.Qtum.Api.Core.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.Core.Repositories.Balances;
 using Lykke.Service.Qtum.Api.Core.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
@@ -58,6 +61,14 @@ namespace Lykke.Service.Qtum.Api.Modules
                 .As<ITransactionObservationRepository<TransactionObservation>>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
 
+            builder.RegisterType<AddressHistoryEntryRepository>()
+                .As<IAddressHistoryEntryRepository<AddressHistoryEntry>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+
+            builder.RegisterType<AddressObservationRepository>()
+                .As<IAddressObservationRepository<AddressObservation>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+
             // Services setup
             builder.RegisterType<AssetService>()
                 .As<IAssetService>()
@@ -72,6 +83,9 @@ namespace Lykke.Service.Qtum.Api.Modules
             
             builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation>>()
                 .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>>();
+
+            builder.RegisterType<HistoryService<AddressHistoryEntry, AddressObservation>>()
+                .As<IHistoryService<AddressHistoryEntry, AddressObservation>>();
 
             builder.RegisterType<QtumInsightApi>()
                 .As<IInsightApiService>()
