@@ -50,15 +50,15 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             
             builder.RegisterType<TransactionBodyRepository>()
                 .As<ITransactionBodyRepository<TransactionBody>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
 
             builder.RegisterType<TransactionMetaRepository>()
                 .As<ITransactionMetaRepository<TransactionMeta>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
 
             builder.RegisterType<TransactionObservationRepository>()
                 .As<ITransactionObservationRepository<TransactionObservation>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
             
             // Services setup
             builder.RegisterType<AssetService>()
