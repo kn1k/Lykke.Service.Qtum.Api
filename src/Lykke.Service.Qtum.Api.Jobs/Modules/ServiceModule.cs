@@ -1,8 +1,11 @@
 ﻿using System;
 using Autofac;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Balances;
+using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Balances;
 using Lykke.Service.Qtum.Api.Core.Helpers;
+using Lykke.Service.Qtum.Api.Core.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.Core.Repositories.Balances;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers;
@@ -44,7 +47,15 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             builder.RegisterType<AddressBalanceRepository>()
                 .As<IAddressBalanceRepository<AddressBalance>>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
-            
+
+            builder.RegisterType<AddressHistoryEntryRepository>()
+                .As<IAddressHistoryEntryRepository<AddressHistoryEntry>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+
+            builder.RegisterType<AddressObservationRepository>()
+                .As<IAddressObservationRepository<AddressObservation>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+
             // Services setup
             builder.RegisterType<AssetService>()
                 .As<IAssetService>()
@@ -56,13 +67,21 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             
             builder.RegisterType<BalanceService<BalanceObservation, AddressBalance>>()
                 .As<IBalanceService<BalanceObservation, AddressBalance>>();
-            
+
+            builder.RegisterType<HistoryService<AddressHistoryEntry, AddressObservation>>()
+                .As<IHistoryService<AddressHistoryEntry, AddressObservation>>();
+
             builder.RegisterType<QtumInsightApi>()
                 .As<IInsightApiService>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
-                        
+
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()
+                .As<IStartable>()
+                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
+                .SingleInstance();
+
+            builder.RegisterType<AddressHistoryRefreshJob>()
                 .As<IStartable>()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();
