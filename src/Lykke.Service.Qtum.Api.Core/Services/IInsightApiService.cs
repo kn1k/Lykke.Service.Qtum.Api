@@ -13,14 +13,14 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// Get insight api status
         /// </summary>
         /// <returns>Status <see cref="IStatus"/></returns>
-        Task<IStatus> GetStatus();
+        Task<IStatus> GetStatusAsync();
         
         /// <summary>
         /// Get address utxo
         /// </summary>
         /// <param name="address">Address <see cref="BitcoinAddress"/></param>
         /// <returns>Address utxo list <see cref="IUtxo"/></returns>
-        Task<List<IUtxo>> GetUtxo(BitcoinAddress address);
+        Task<List<IUtxo>> GetUtxoAsync(BitcoinAddress address);
 
         /// <summary>
         /// Get transactions info for specified address
@@ -29,6 +29,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="from">Paging from setting</param>
         /// <param name="to">Paging to setting</param>
         /// <returns>Transactions info list <see cref="IItem"></returns>
-        Task<IAddrTxs> GetAddrTxs(BitcoinAddress address, int from = 0, int to = 50);
+        Task<IAddrTxs> GetAddrTxsAsync(BitcoinAddress address, int from = 0, int to = 50);
     }
 }

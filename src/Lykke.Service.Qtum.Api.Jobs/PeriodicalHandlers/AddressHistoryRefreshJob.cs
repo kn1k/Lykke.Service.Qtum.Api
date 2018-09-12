@@ -32,7 +32,7 @@ namespace Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers
             }
             catch (Exception ex)
             {
-                _log.Error(ex, "Failed to update balances");
+                _log.Error(ex, "Failed to update address history entries");
             }
         }
     }

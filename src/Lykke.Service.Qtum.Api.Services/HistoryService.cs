@@ -38,63 +38,68 @@ namespace Lykke.Service.Qtum.Api.Services
             return await _addressObservationRepository.CreateIfNotExistsAsync(addressObservation);
         }
 
+        ///</inheritdoc>
         public async Task<(string continuation, IEnumerable<TAddressHistory> items)> GetAddressHistoryAsync(int take, string partitionKey, string address, string afterHash = null, string continuation = null)
         {
-            if (address != null && partitionKey != null)
-            {
-                if (afterHash != null)
-                {
-                    var afterRecord = await _addressHistoryEntryRepository.GetAsync(afterHash, partitionKey);
-                    var afterBlockCount = afterRecord.BlockCount;
+            if (address == null) throw new ArgumentNullException(nameof(address));
+            if (partitionKey == null) throw new ArgumentNullException(nameof(partitionKey));
 
-                    return await _addressHistoryEntryRepository.GetByAddressAsync(take, partitionKey, address, afterBlockCount, continuation);
-                }
-                else
-                {
-                    return await _addressHistoryEntryRepository.GetByAddressAsync(take, partitionKey, address, continuation: continuation);
-                }
+            if (afterHash != null)
+            {
+                var afterRecord = await _addressHistoryEntryRepository.GetAsync(afterHash, partitionKey);
+                var afterBlockCount = afterRecord.BlockCount;
+
+                return await _addressHistoryEntryRepository.GetByAddressAsync(take, partitionKey, address, afterBlockCount, continuation);
             }
             else
             {
-                throw new ArgumentException();
+                return await _addressHistoryEntryRepository.GetByAddressAsync(take, partitionKey, address, continuation: continuation);
             }
         }
 
+        ///</inheritdoc>
         public async Task<(string continuation, IEnumerable<TAddressObservation> items)> GetAddressObservationAsync(int pageSize, string continuation = null, string partitionKey = null)
         {
             return await _addressObservationRepository.GetAsync(pageSize, continuation, partitionKey);
         }
 
+        ///</inheritdoc>
         public Task<(string continuation, IEnumerable<TAddressHistory> items)> GetAddressPendingHistoryAsync(int take, string continuation = null)
         {
             throw new NotImplementedException();
         }
 
+        ///</inheritdoc>
         public Task<(string continuation, IEnumerable<TAddressHistory> items)> GetHistoryAsync(int take, string continuation, string partitionKey = null)
         {
             throw new NotImplementedException();
         }
 
+        ///</inheritdoc>
         public async Task<bool> InsertAddressHistoryAsync(TAddressHistory addressHistoryEntry)
         {
             return await _addressHistoryEntryRepository.CreateIfNotExistsAsync(addressHistoryEntry);
         }
 
+        ///</inheritdoc>
         public async Task<bool> IsAddressObservedAsync(TAddressObservation addressObservation)
         {
             return await _addressObservationRepository.IsExistAsync(addressObservation);
         }
 
+        ///</inheritdoc>
         public async Task<bool> RemoveAddressHistoryEntryAsync(TAddressHistory addressHistoryEntry)
         {
             return await _addressHistoryEntryRepository.DeleteIfExistAsync(addressHistoryEntry);
         }
 
+        ///</inheritdoc>
         public async Task<bool> RemoveAddressObservationAsync(TAddressObservation addressObservation)
         {
             return await _addressObservationRepository.DeleteIfExistAsync(addressObservation);
         }
 
+        ///</inheritdoc>
         public async Task UpdateObservedAddressHistoryAsync(int pageSize = 10)
         {
             (string continuation, IEnumerable<TAddressObservation> items) addressObservation;

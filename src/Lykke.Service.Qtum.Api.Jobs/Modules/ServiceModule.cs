@@ -38,23 +38,25 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             // CoinConverter            
             builder.RegisterType<CoinConverter>()
                 .As<CoinConverter>();
-            
+
             // Repositories setup
+            var dataConnString = _appSettings.Nested(s => s.QtumApiService.Db.DataConnString);
+
             builder.RegisterType<BalanceObservationRepository>()
                 .As<IBalanceObservationRepository<BalanceObservation>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(dataConnString));
             
             builder.RegisterType<AddressBalanceRepository>()
                 .As<IAddressBalanceRepository<AddressBalance>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(dataConnString));
 
             builder.RegisterType<AddressHistoryEntryRepository>()
                 .As<IAddressHistoryEntryRepository<AddressHistoryEntry>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(dataConnString));
 
             builder.RegisterType<AddressObservationRepository>()
                 .As<IAddressObservationRepository<AddressObservation>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiJobsService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(dataConnString));
 
             // Services setup
             builder.RegisterType<AssetService>()

@@ -69,7 +69,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetStatus();
+                var result = await _insightApiService.GetStatusAsync();
                 return result.Info.Blocks;
             });
 
@@ -81,7 +81,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetUtxo(address);
+                var result = await _insightApiService.GetUtxoAsync(address);
                 if (result.Any())
                 {
                     return result.Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
@@ -127,7 +127,7 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 var policyResult = await _policy.ExecuteAsync(async () =>
                 {
-                    return await _insightApiService.GetAddrTxs(address, from, to);
+                    return await _insightApiService.GetAddrTxsAsync(address, from, to);
                 });
 
                 if (policyResult.TotalItems > 0)
