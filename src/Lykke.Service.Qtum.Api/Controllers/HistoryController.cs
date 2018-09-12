@@ -117,13 +117,18 @@ namespace Lykke.Service.Qtum.Api.Controllers
         [HttpGet("from/{address}")]
         [SwaggerOperation("GetHistoryFrom")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTransactionContract>), (int)HttpStatusCode.OK)]
-        public async Task<IEnumerable<HistoricalTransactionContract>> GetHistoryFromAsync(string address,
-            [FromQuery] int take = 100, [FromQuery] string afterHash = null)
+        public async Task<IActionResult> GetHistoryFromAsync(string address,
+            [FromQuery] int? take, [FromQuery] string afterHash = null)
         {
-            var history = await _historyService.GetAddressHistoryAsync(take,
+            if (!take.HasValue)
+            {
+                return StatusCode((int)HttpStatusCode.BadRequest, ErrorResponse.Create("Take is required"));
+            }
+
+            var history = await _historyService.GetAddressHistoryAsync(take.Value,
                 Enum.GetName(typeof(AddressObservationType), AddressObservationType.From), address, afterHash);
 
-            return history.items?.OrderByDescending(x => x.BlockCount).Select(x => new HistoricalTransactionContract
+            return StatusCode((int)HttpStatusCode.OK, history.items?.OrderByDescending(x => x.BlockCount).Select(x => new HistoricalTransactionContract
             {
                 Amount = x.Amount,
                 AssetId = x.AssetId,
@@ -134,7 +139,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 TransactionType = x.TransactionType == Core.Services.TransactionType.send
                     ? BlockchainApi.Contract.Transactions.TransactionType.Send
                     : BlockchainApi.Contract.Transactions.TransactionType.Receive
-            });
+            }));
         }
 
         /// <summary>
@@ -147,12 +152,17 @@ namespace Lykke.Service.Qtum.Api.Controllers
         [HttpGet("to/{address}")]
         [SwaggerOperation("GetHistoryTo")]
         [ProducesResponseType(typeof(IEnumerable<HistoricalTransactionContract>), (int)HttpStatusCode.OK)]
-        public async Task<IEnumerable<HistoricalTransactionContract>> GetHistoryToAsync(string address, [FromQuery] int take,
+        public async Task<IActionResult> GetHistoryToAsync(string address, [FromQuery] int? take,
             [FromQuery] string afterHash = null)
         {
-            var history = await _historyService.GetAddressHistoryAsync(take,
+            if (!take.HasValue)
+            {
+                return StatusCode((int)HttpStatusCode.BadRequest, ErrorResponse.Create("Take is required"));
+            }
+
+            var history = await _historyService.GetAddressHistoryAsync(take.Value,
                 Enum.GetName(typeof(AddressObservationType), AddressObservationType.To), address, afterHash);
-            return history.items?.OrderByDescending(x => x.BlockCount).Select(
+            return StatusCode((int)HttpStatusCode.OK, history.items?.OrderByDescending(x => x.BlockCount).Select(
                 x => new HistoricalTransactionContract
                 {
                     Amount = x.Amount,
@@ -164,7 +174,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                     TransactionType = x.TransactionType == Core.Services.TransactionType.send
                         ? BlockchainApi.Contract.Transactions.TransactionType.Send
                         : BlockchainApi.Contract.Transactions.TransactionType.Receive
-                });
+                }));
         }
 
         /// <summary>
