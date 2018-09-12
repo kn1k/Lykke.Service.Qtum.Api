@@ -10,11 +10,5 @@ namespace Lykke.Service.Qtum.Api.Services.InsightApi
 
         [JsonProperty("asm")]
         public string Asm { get; set; }
-
-        [JsonProperty("addresses", NullValueHandling = NullValueHandling.Ignore)]
-        public string[] Addresses { get; set; }
-
-        [JsonProperty("type", NullValueHandling = NullValueHandling.Ignore)]
-        public TypeEnum? Type { get; set; }
     }
 }

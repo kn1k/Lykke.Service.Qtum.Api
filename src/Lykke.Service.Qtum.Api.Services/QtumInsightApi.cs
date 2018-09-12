@@ -87,7 +87,7 @@ namespace Lykke.Service.Qtum.Api.Services
 
             request.AddParameter("application/json; charset=utf-8", jRawTx.ToString(), ParameterType.RequestBody);
 
-            var response = await client.ExecuteTaskAsync<ITxId>(request);
+            var response = await client.ExecuteTaskAsync<TxId>(request);
 
             if (response.IsSuccessful)
             {
@@ -111,7 +111,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var client = new RestClient($"{_url}/tx/{txId.txid}");
             var request = new RestRequest(Method.GET);
-            var response = await client.ExecuteTaskAsync<ITxInfo>(request);
+            var response = await client.ExecuteTaskAsync<TxInfo>(request);
 
             if (response.IsSuccessful)
             {

@@ -141,9 +141,9 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address)
+        public async Task<List<ITxInfo>> GetAddressTransactionsInfoAsync(BitcoinAddress address)
         {
-            List<IItem> result = null;
+            List<ITxInfo> result = null;
             const int pageSize = 50;
             int from = 0, to = from + pageSize;
 
@@ -160,7 +160,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 {
                     if (result == null)
                     {
-                        result = new List<IItem>();
+                        result = new List<ITxInfo>();
                     }
 
                     result.AddRange(policyResult.Items);

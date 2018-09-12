@@ -5,9 +5,5 @@
         string Hex { get; set; }
 
         string Asm { get; set; }
-
-        string[] Addresses { get; set; }
-
-        TypeEnum? Type { get; set; }
     }
 }

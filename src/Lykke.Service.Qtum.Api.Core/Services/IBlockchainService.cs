@@ -59,7 +59,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// </summary>
         /// <param name="address">Address</param>
         /// <returns>List of transaction info items</returns>
-        Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
+        Task<List<ITxInfo>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
         
         /// <summary>
         /// Broadcast transaction to network
