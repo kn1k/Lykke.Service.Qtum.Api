@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Numerics;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
 using Lykke.Service.Qtum.Api.Core.Services;
 using NBitcoin;
 
@@ -68,7 +69,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetStatus();
+                var result = await _insightApiService.GetStatusAsync();
                 return result.Info.Blocks;
             });
 
@@ -80,7 +81,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetUtxo(address);
+                var result = await _insightApiService.GetUtxoAsync(address);
                 if (result.Any())
                 {
                     return result.Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
@@ -111,6 +112,48 @@ namespace Lykke.Service.Qtum.Api.Services
         private BitcoinAddress BitcoinAddressCreate(string address)
         {
             return BitcoinAddress.Create(address, _network);
+        }
+
+        /// <inheritdoc/>
+        public async Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address)
+        {
+            List<IItem> result = null;
+            const int pageSize = 50;
+            int from = 0, to = from + pageSize;
+
+            var needAdditionalRequest = false;
+
+            do
+            {
+                var policyResult = await _policy.ExecuteAsync(async () =>
+                {
+                    return await _insightApiService.GetAddrTxsAsync(address, from, to);
+                });
+
+                if (policyResult.TotalItems > 0)
+                {
+                    if (result == null)
+                    {
+                        result = new List<IItem>();
+                    }
+
+                    result.AddRange(policyResult.Items);
+
+                    if (policyResult.TotalItems > to)
+                    {
+                        from = to;
+                        to = Math.Min(to + pageSize, policyResult.TotalItems);
+                        needAdditionalRequest = true;
+                    }
+                    else
+                    {
+                        needAdditionalRequest = false;
+                    }
+                }
+
+            } while (needAdditionalRequest);
+            
+            return result;
         }
     }
 }
