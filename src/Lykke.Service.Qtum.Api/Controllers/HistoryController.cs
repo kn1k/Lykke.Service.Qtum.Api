@@ -125,8 +125,8 @@ namespace Lykke.Service.Qtum.Api.Controllers
 
             return history.items?.OrderByDescending(x => x.BlockCount).Select(x => new HistoricalTransactionContract
             {
-                Amount = x.Amount, // TODO (nkataev) need to convert?
-                AssetId = _assetService.GetQtumAsset().Id,
+                Amount = x.Amount,
+                AssetId = x.AssetId,
                 FromAddress = x.FromAddress,
                 ToAddress = x.ToAddress,
                 Hash = x.Hash,
@@ -156,7 +156,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 x => new HistoricalTransactionContract
                 {
                     Amount = x.Amount,
-                    AssetId = _assetService.GetQtumAsset().Id,
+                    AssetId = x.AssetId,
                     FromAddress = x.FromAddress,
                     ToAddress = x.ToAddress,
                     Hash = x.Hash,
