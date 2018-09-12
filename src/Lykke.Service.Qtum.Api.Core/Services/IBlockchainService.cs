@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
 using NBitcoin;
 
 namespace Lykke.Service.Qtum.Api.Core.Services
@@ -51,6 +53,13 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address</param>
         /// <returns>Balance for address</returns>
         Task<BigInteger> GetAddressBalanceAsync(BitcoinAddress address);
+
+        /// <summary>
+        /// Get transactions info for specified address
+        /// </summary>
+        /// <param name="address">Address</param>
+        /// <returns>List of transaction info items</returns>
+        Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
         
         /// <summary>
         /// Broadcast transaction to network

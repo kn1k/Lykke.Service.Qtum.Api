@@ -1,10 +1,13 @@
 ﻿using System;
 using Autofac;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Balances;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
+using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Balances;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Helpers;
+using Lykke.Service.Qtum.Api.Core.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.Core.Repositories.Balances;
 using Lykke.Service.Qtum.Api.Core.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
@@ -38,15 +41,25 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             // CoinConverter            
             builder.RegisterType<CoinConverter>()
                 .As<CoinConverter>();
-            
+
             // Repositories setup
+            var dataConnString = _appSettings.Nested(s => s.QtumApiService.Db.DataConnString);
+
             builder.RegisterType<BalanceObservationRepository>()
                 .As<IBalanceObservationRepository<BalanceObservation>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(dataConnString));
             
             builder.RegisterType<AddressBalanceRepository>()
                 .As<IAddressBalanceRepository<AddressBalance>>()
-                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+                .WithParameter(TypedParameter.From(dataConnString));
+
+            builder.RegisterType<AddressHistoryEntryRepository>()
+                .As<IAddressHistoryEntryRepository<AddressHistoryEntry>>()
+                .WithParameter(TypedParameter.From(dataConnString));
+
+            builder.RegisterType<AddressObservationRepository>()
+                .As<IAddressObservationRepository<AddressObservation>>()
+                .WithParameter(TypedParameter.From(dataConnString));
             
             builder.RegisterType<TransactionBodyRepository>()
                 .As<ITransactionBodyRepository<TransactionBody>>()
@@ -71,7 +84,10 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             
             builder.RegisterType<BalanceService<BalanceObservation, AddressBalance>>()
                 .As<IBalanceService<BalanceObservation, AddressBalance>>();
-            
+
+            builder.RegisterType<HistoryService<AddressHistoryEntry, AddressObservation>>()
+                .As<IHistoryService<AddressHistoryEntry, AddressObservation>>();
+
             builder.RegisterType<QtumInsightApi>()
                 .As<IInsightApiService>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
@@ -81,6 +97,11 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                         
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()
+                .As<IStartable>()
+                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
+                .SingleInstance();
+
+            builder.RegisterType<AddressHistoryRefreshJob>()
                 .As<IStartable>()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();
