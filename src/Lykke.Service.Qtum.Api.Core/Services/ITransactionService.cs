@@ -23,7 +23,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="minConfirmations">Min confirmation count to transaction complete</param>
         /// <param name="pageSize">Update page size</param>
         /// <returns><see cref="Task"/></returns>
-        Task BroadcastSignedTransactionsAsync(long minConfirmations = 1, int pageSize = 10);
+        Task BroadcastSignedTransactionsAsync(long minConfirmations = 20, int pageSize = 10);
         
         /// <summary>
         /// Get transaction meta by operation Id

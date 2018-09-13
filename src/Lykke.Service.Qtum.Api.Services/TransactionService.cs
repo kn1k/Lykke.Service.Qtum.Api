@@ -99,14 +99,12 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 1, int pageSize = 10)
+        public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 20, int pageSize = 10)
         {
-            (string continuation, IEnumerable<TTransactionObservation> items) transactionObservations;
             string continuation = null;
             do
             {
-                transactionObservations =
-                    await GetTransactionObservationAsync(pageSize, continuation);
+                var transactionObservations = await GetTransactionObservationAsync(pageSize, continuation);
 
                 foreach (var transactionObservation in transactionObservations.items)
                 {
