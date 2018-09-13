@@ -37,9 +37,13 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return JObject.Parse(response.Content).ToObject<AddrTxs>();
             }
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
+                throw new ArgumentException(response.Content, response.ErrorException);
             }
         }   
 
@@ -54,9 +58,13 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return JObject.Parse(response.Content).ToObject<Status>();
             }
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
+                throw new ArgumentException(response.Content, response.ErrorException);
             }
         }
 
@@ -71,9 +79,13 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return response.Data.Select(x => (IUtxo) x).ToList();
             }
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
+                throw new ArgumentException(response.Content, response.ErrorException);
             }
         }
 
@@ -99,9 +111,13 @@ namespace Lykke.Service.Qtum.Api.Services
                 {
                     return (null, new ErrorResponse {error = response.Content});
                 }
+                if (response.ResponseStatus == ResponseStatus.Error)
+                {
+                    throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+                }
                 else
                 {
-                    throw response.ErrorException;
+                    throw new ArgumentException(response.Content, response.ErrorException);
                 }
             }
         }
@@ -117,9 +133,14 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return response.Data;
             }
+
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
+                throw new ArgumentException(response.Content, response.ErrorException);
             }
         }
     }

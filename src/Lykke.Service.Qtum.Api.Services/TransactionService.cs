@@ -108,47 +108,55 @@ namespace Lykke.Service.Qtum.Api.Services
 
                 foreach (var transactionObservation in transactionObservations.items)
                 {
-                    var txMeta =
-                        await GetTransactionMetaAsync(transactionObservation.OperationId
-                            .ToString());
-
-                    if (txMeta.State == TransactionState.Signed)
+                    try
                     {
-                        var txBody =
-                            await GetTransactionBodyByIdAsync(transactionObservation.OperationId);
-                        var broadcactResult =
-                            await _blockchainService.BroadcastSignedTransactionAsync(txBody.SignedTransaction);
+                        var txMeta =
+                            await GetTransactionMetaAsync(transactionObservation.OperationId
+                                .ToString());
 
-                        if (broadcactResult.error != null)
+                        if (txMeta.State == TransactionState.Signed)
                         {
-                            txMeta.Error = broadcactResult.error;
-                            txMeta.State = TransactionState.Failed;
+                            var txBody =
+                                await GetTransactionBodyByIdAsync(transactionObservation.OperationId);
+                            var broadcactResult =
+                                await _blockchainService.BroadcastSignedTransactionAsync(txBody.SignedTransaction);
+
+                            if (broadcactResult.error != null)
+                            {
+                                txMeta.Error = broadcactResult.error;
+                                txMeta.State = TransactionState.Failed;
+                            }
+                            else
+                            {
+                                txMeta.TxId = broadcactResult.txId;
+                            }
+                        }
+
+                        var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                        if (txInfo != null)
+                        {
+                            if (txInfo.Confirmations > minConfirmations)
+                            {
+                                txMeta.State = TransactionState.Confirmed;
+                                txMeta.Hash = txInfo.Blockhash;
+                                txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                                txMeta.BlockCount = txInfo.Blockheight;
+                            }
                         }
                         else
                         {
-                            txMeta.TxId = broadcactResult.txId;
+                            txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                            txMeta.State = TransactionState.Failed;
                         }
+
+                        await UpdateTransactionMeta(txMeta);
                     }
-
-                    var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
-
-                    if (txInfo != null)
+                    catch (Exception e)
                     {
-                        if (txInfo.Confirmations > minConfirmations)
-                        {
-                            txMeta.State = TransactionState.Confirmed;
-                            txMeta.Hash = txInfo.Blockhash;
-                            txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
-                            txMeta.BlockCount = txInfo.Blockheight;
-                        }
-                    }
-                    else
-                    {
-                        txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
-                        txMeta.State = TransactionState.Failed;
+                        _log.Error($"failed to update tx info for operation: {transactionObservation.OperationId}", e);
                     }
 
-                    await UpdateTransactionMeta(txMeta);
                 }
 
                 continuation = transactionObservations.continuation;
