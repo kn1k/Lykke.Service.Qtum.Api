@@ -150,7 +150,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         case TransactionState.Failed:
                         case TransactionState.BlockChainFailed:
                             state = BroadcastedTransactionState.Failed;
-                            //TODO: suppurt other code
+                            //TODO: support other code
                             blockchainErrorCode = BlockchainErrorCode.Unknown;
                             break;
                         default:
