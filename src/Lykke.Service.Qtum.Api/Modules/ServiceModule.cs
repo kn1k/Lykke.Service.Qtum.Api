@@ -90,8 +90,8 @@ namespace Lykke.Service.Qtum.Api.Modules
             builder.RegisterType<BalanceService<BalanceObservation, AddressBalance>>()
                 .As<IBalanceService<BalanceObservation, AddressBalance>>();
             
-            builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation>>()
-                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>>();
+            builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>()
+                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>();
 
             builder.RegisterType<HistoryService<AddressHistoryEntry, AddressObservation>>()
                 .As<IHistoryService<AddressHistoryEntry, AddressObservation>>();

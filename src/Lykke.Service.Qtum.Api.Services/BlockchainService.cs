@@ -23,7 +23,6 @@ namespace Lykke.Service.Qtum.Api.Services
     {
         private readonly Network _network;
         private readonly IInsightApiService _insightApiService;
-        private readonly ISpentOutputRepository<IOutput> _spentOutputRepository;
 
         private const int RetryCount = 4;
 
@@ -31,11 +30,10 @@ namespace Lykke.Service.Qtum.Api.Services
 
         private readonly Policy _policy;
 
-        public BlockchainService(Network network, IInsightApiService insightApiService, ISpentOutputRepository<IOutput> spentOutputRepository)
+        public BlockchainService(Network network, IInsightApiService insightApiService)
         {
             _network = network;
             _insightApiService = insightApiService;
-            _spentOutputRepository = spentOutputRepository;
 
             _policy = Policy
                 .Handle<HttpRequestException>()
@@ -179,67 +177,6 @@ namespace Lykke.Service.Qtum.Api.Services
                             new TxOut(new Money(ulong.Parse(source.Satoshis)),
                             source.ScriptPubKey.ToScript()));
                     }).ToList();
-        }
-
-        public async Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0)
-        {
-            return await Filter(await GetUnspentOutputsAsync(address, confirmationsCount));
-        }
-
-        private async Task<IEnumerable<Coin>> Filter(IList<Coin> coins)
-        {
-            var spentOutputs = new HashSet<OutPoint>((await _spentOutputRepository.GetSpentOutputs(coins.Select(o => new Output(o.Outpoint))))
-                                                                                  .Select(o => new OutPoint(uint256.Parse(o.TransactionHash), o.N)));
-            return coins.Where(c => !spentOutputs.Contains(c.Outpoint));
-        }
-
-        /// <inheritdoc/>
-        public async Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee)
-        {
-            var builder = new TransactionBuilder();
-
-            var coins = (await GetFilteredUnspentOutputsAsync(fromAddress)).ToList();
-            var balance = coins.Select(o => o.Amount).Sum(o => o.Satoshi);
-
-            if (balance > amount &&
-                balance - amount < new TxOut(Money.Zero, ParseAddress(fromAddress)).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee).Satoshi)
-            {
-                amount = balance;
-            }
-
-            return await SendWithChange(builder, coins, ParseAddress(toAddress), new Money(balance), new Money(amount), ParseAddress(fromAddress), includeFee);
-        }
-
-        private async Task<string> SendWithChange(TransactionBuilder builder, List<Coin> coins, IDestination destination, Money balance, Money amount, IDestination changeDestination, bool includeFee)
-        {
-            if (amount.Satoshi <= 0)
-                throw new Exception("Amount can't be less or equal to zero");
-
-            builder.AddCoins(coins)
-                   .Send(destination, amount)
-                   .SetChange(changeDestination);
-
-            
-            var calculatedFee = Money.Satoshis(400000); // TODO use async feeservice instead
-            var requiredBalance = amount + (includeFee ? Money.Zero : calculatedFee);
-
-            if (balance < requiredBalance)
-                throw new Exception($"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.");
-
-            if (includeFee)
-            {
-                if (calculatedFee > amount)
-                    throw new Exception($"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
-                //builder.SubtractFees(); // TODO it needs new version on nbitcoin
-                amount = amount - calculatedFee;
-            }
-
-            builder.SendFees(calculatedFee);
-
-            var tx = builder.BuildTransaction(false);
-            var usedCoins = tx.Inputs.Select(input => coins.First(o => o.Outpoint == input.PrevOut)).ToArray();
-
-            return Serializer.ToString<(Transaction, ICoin[])>((tx, usedCoins));
-        }
+        }        
     }
 }

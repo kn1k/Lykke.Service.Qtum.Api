@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
+using NBitcoin;
 
 namespace Lykke.Service.Qtum.Api.Core.Services
 {
-    public interface ITransactionService<TTransactionBody, TTransactionMeta, TTransactionObservation>
+    public interface ITransactionService<TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput>
         where TTransactionBody : ITransactionBody
         where TTransactionMeta : ITransactionMeta
         where TTransactionObservation : ITransactionObservation
+        where TOutput: IOutput
     {
         /// <summary>
         /// Check is transaction already broacasted.
@@ -55,5 +59,23 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="transactionBody">Transaction body</param>
         /// <returns>true if created, false if existed before</returns>
         Task<bool> SaveTransactionBodyAsync(TTransactionBody transactionBody);
+
+        /// <summary>
+        /// Get unspent outputs for the address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="confirmationsCount"></param>
+        /// <returns></returns>
+        Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0);
+
+        /// <summary>
+        /// Build unsined send transaction
+        /// </summary>
+        /// <param name="fromAddress">Address from</param>
+        /// <param name="toAddress">Address to</param>
+        /// <param name="amount">Amount</param>
+        /// <param name="includeFee">Flag indicates that transaction should incude fee</param>
+        /// <returns>Unsined transaction</returns>
+        Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee);
     }
 }

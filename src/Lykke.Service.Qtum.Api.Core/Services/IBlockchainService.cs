@@ -58,17 +58,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// </summary>
         /// <param name="address">Address</param>
         /// <returns>List of transaction info items</returns>
-        Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
-
-        /// <summary>
-        /// Build unsined send transaction
-        /// </summary>
-        /// <param name="fromAddress">Address from</param>
-        /// <param name="toAddress">Address to</param>
-        /// <param name="amount">Amount</param>
-        /// <param name="includeFee">Flag indicates that transaction should incude fee</param>
-        /// <returns>Unsined transaction</returns>
-        Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee);
+        Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address);        
 
         /// <summary>
         /// Get a list of unspent outputs
@@ -76,15 +66,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address for getting outputs</param>
         /// <param name="minConfirmationCount"></param>
         /// <returns></returns>
-        Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);
-
-        /// <summary>
-        /// Get unspent outputs for the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="confirmationsCount"></param>
-        /// <returns></returns>
-        Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0);
+        Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);        
     }
     
     public enum TransactionType

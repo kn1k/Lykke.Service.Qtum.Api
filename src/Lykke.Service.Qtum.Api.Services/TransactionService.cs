@@ -1,31 +1,41 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Log;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
+using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
+using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
+using NBitcoin;
+using NBitcoin.JsonConverters;
 using Newtonsoft.Json.Linq;
 
 namespace Lykke.Service.Qtum.Api.Services
 {
-    public class TransactionService<TTransactionBody, TTransactionMeta, TTransactionObservation> : ITransactionService<
-        TTransactionBody, TTransactionMeta, TTransactionObservation>
+    public class TransactionService<TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput> : ITransactionService<
+        TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput>
         where TTransactionBody : ITransactionBody, new()
         where TTransactionMeta : ITransactionMeta, new()
         where TTransactionObservation : ITransactionObservation, new()
+        where TOutput: IOutput, new()
     {
         private readonly ILog _log;
         private readonly ITransactionBodyRepository<TTransactionBody> _transactionBodyRepository;
         private readonly ITransactionMetaRepository<TTransactionMeta> _transactionMetaRepository;
         private readonly ITransactionObservationRepository<TTransactionObservation> _transactionObservationRepository;
+        private readonly ISpentOutputRepository<TOutput> _spentOutputRepository;
         private readonly IBlockchainService _blockchainService;
 
-        public TransactionService(ILogFactory logFactory, ITransactionBodyRepository<TTransactionBody> transactionBodyRepository, ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository, ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository, IBlockchainService blockchainService)
+        public TransactionService(ILogFactory logFactory, ITransactionBodyRepository<TTransactionBody> transactionBodyRepository, ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository, ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository, IBlockchainService blockchainService, ISpentOutputRepository<TOutput> spentOutputRepository)
         {
             _transactionBodyRepository = transactionBodyRepository;
             _transactionMetaRepository = transactionMetaRepository;
             _transactionObservationRepository = transactionObservationRepository;
+            _spentOutputRepository = spentOutputRepository;
             _blockchainService = blockchainService;
             _log = logFactory.CreateLog(this);
         }
@@ -66,7 +76,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 _log.Info(nameof(GetUnsignSendTransactionAsync), $"Create new txMeta, with id: {operationId}", JObject.FromObject(transactionMeta));
 
                 var unsignedTransaction =
-                    await _blockchainService.CreateUnsignSendTransactionAsync(transactionMeta.FromAddress,
+                    await CreateUnsignSendTransactionAsync(transactionMeta.FromAddress,
                         transactionMeta.ToAddress, long.Parse(transactionMeta.Amount), transactionMeta.IncludeFee);
 
                 transactionBody = new TTransactionBody
@@ -136,6 +146,67 @@ namespace Lykke.Service.Qtum.Api.Services
         public async Task<bool> SaveTransactionBodyAsync(TTransactionBody transactionBody)
         {
             return await _transactionBodyRepository.CreateIfNotExistsAsync(transactionBody);
+        }
+
+        public async Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0)
+        {
+            return await Filter(await _blockchainService.GetUnspentOutputsAsync(address, confirmationsCount));
+        }
+
+        private async Task<IEnumerable<Coin>> Filter(IList<Coin> coins)
+        {
+            var spentOutputs = new HashSet<OutPoint>((await _spentOutputRepository.GetSpentOutputs(coins.Select(o => new Output(o.Outpoint))))
+                                                                                  .Select(o => new OutPoint(uint256.Parse(o.TransactionHash), o.N)));
+            return coins.Where(c => !spentOutputs.Contains(c.Outpoint));
+        }
+
+        /// <inheritdoc/>
+        public async Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee)
+        {
+            var builder = new TransactionBuilder();
+
+            var coins = (await GetFilteredUnspentOutputsAsync(fromAddress)).ToList();
+            var balance = coins.Select(o => o.Amount).Sum(o => o.Satoshi);
+
+            if (balance > amount &&
+                balance - amount < new TxOut(Money.Zero, _blockchainService.ParseAddress(fromAddress)).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee).Satoshi)
+            {
+                amount = balance;
+            }
+
+            return await SendWithChange(builder, coins, _blockchainService.ParseAddress(toAddress), new Money(balance), new Money(amount), _blockchainService.ParseAddress(fromAddress), includeFee);
+        }
+
+        private async Task<string> SendWithChange(TransactionBuilder builder, List<Coin> coins, IDestination destination, Money balance, Money amount, IDestination changeDestination, bool includeFee)
+        {
+            if (amount.Satoshi <= 0)
+                throw new Exception("Amount can't be less or equal to zero");
+
+            builder.AddCoins(coins)
+                   .Send(destination, amount)
+                   .SetChange(changeDestination);
+
+
+            var calculatedFee = Money.Satoshis(400000); // TODO use async feeservice instead
+            var requiredBalance = amount + (includeFee ? Money.Zero : calculatedFee);
+
+            if (balance < requiredBalance)
+                throw new Exception($"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.");
+
+            if (includeFee)
+            {
+                if (calculatedFee > amount)
+                    throw new Exception($"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
+                //builder.SubtractFees(); // TODO it needs new version on nbitcoin
+                amount = amount - calculatedFee;
+            }
+
+            builder.SendFees(calculatedFee);
+
+            var tx = builder.BuildTransaction(false);
+            var usedCoins = tx.Inputs.Select(input => coins.First(o => o.Outpoint == input.PrevOut)).ToArray();
+
+            return Serializer.ToString<(Transaction, ICoin[])>((tx, usedCoins));
         }
     }
 }

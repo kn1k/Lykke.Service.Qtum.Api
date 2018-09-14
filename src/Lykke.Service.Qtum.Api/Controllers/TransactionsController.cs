@@ -7,6 +7,7 @@ using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.Log;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Helpers;
@@ -22,12 +23,13 @@ namespace Lykke.Service.Qtum.Api.Controllers
         private readonly ILog _log;
         private readonly IBlockchainService _blockchainService;
 
-        private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>
+        private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>
             _transactionService;
 
-        public TransactionsController(ILogFactory logFactory, IBlockchainService blockchainService)
+        public TransactionsController(ILogFactory logFactory, IBlockchainService blockchainService, ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity> transactionService)
         {
             _blockchainService = blockchainService;
+            _transactionService = transactionService;
             _log = logFactory.CreateLog(this);
         }
 
