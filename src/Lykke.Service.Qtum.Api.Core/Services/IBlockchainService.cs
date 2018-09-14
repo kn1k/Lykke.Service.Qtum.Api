@@ -77,6 +77,14 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="minConfirmationCount"></param>
         /// <returns></returns>
         Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);
+
+        /// <summary>
+        /// Get unspent outputs for the address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="confirmationsCount"></param>
+        /// <returns></returns>
+        Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0);
     }
     
     public enum TransactionType

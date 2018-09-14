@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs
 {
-    public interface ISpentOutputRepository
+    public interface ISpentOutputRepository<TSpentOutput> : IRepository<TSpentOutput>
+        where TSpentOutput: IOutput
     {
         Task InsertSpentOutputs(Guid transactionId, IEnumerable<IOutput> outputs);
 
