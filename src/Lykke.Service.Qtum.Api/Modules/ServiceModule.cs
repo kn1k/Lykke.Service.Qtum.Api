@@ -91,6 +91,12 @@ namespace Lykke.Service.Qtum.Api.Modules
                 .As<IInsightApiService>()
                 .WithParameter(
                     TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
+            
+            builder.RegisterType<FeeService>()
+                .As<IFeeService>()
+                .WithParameter("feePerByte", TypedParameter.From(_appSettings.Nested(s => s.FeeSettings.FeePerByte).CurrentValue))
+                .WithParameter("minFeeValueSatoshi", TypedParameter.From(_appSettings.Nested(s => s.FeeSettings.MinFeeValueSatoshi).CurrentValue))
+                .WithParameter("maxFeeValueSatoshi",TypedParameter.From(_appSettings.Nested(s => s.FeeSettings.MaxFeeValueSatoshi).CurrentValue));
         }
     }
 }
