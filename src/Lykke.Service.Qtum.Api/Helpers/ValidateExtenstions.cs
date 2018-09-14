@@ -2,6 +2,7 @@
 using System.Linq;
 using Common;
 using Lykke.Common.Api.Contract.Responses;
+using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -72,7 +73,27 @@ namespace Lykke.Service.Qtum.Api.Helpers
 
             return true;
         }
-        
+
+        public static bool IsBuildSingleTransactionRequestValid(this ModelStateDictionary self, BuildSingleTransactionRequest requestParams, IBlockchainService blockchainService)
+        {
+            if (requestParams.OperationId == null || requestParams.OperationId == System.Guid.Empty)
+            {
+                return false;
+            }
+
+            if (requestParams.ToAddress == null || !blockchainService.IsAddressValid(requestParams.ToAddress))
+            {
+                return false;
+            }
+
+            if (requestParams.FromAddress == null || !blockchainService.IsAddressValid(requestParams.FromAddress))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Cast Validation information to Lykke error response
         /// </summary>

@@ -59,6 +59,24 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address</param>
         /// <returns>List of transaction info items</returns>
         Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
+
+        /// <summary>
+        /// Build unsined send transaction
+        /// </summary>
+        /// <param name="fromAddress">Address from</param>
+        /// <param name="toAddress">Address to</param>
+        /// <param name="amount">Amount</param>
+        /// <param name="includeFee">Flag indicates that transaction should incude fee</param>
+        /// <returns>Unsined transaction</returns>
+        Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee);
+
+        /// <summary>
+        /// Get a list of unspent outputs
+        /// </summary>
+        /// <param name="address">Address for getting outputs</param>
+        /// <param name="minConfirmationCount"></param>
+        /// <returns></returns>
+        Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);
     }
     
     public enum TransactionType
