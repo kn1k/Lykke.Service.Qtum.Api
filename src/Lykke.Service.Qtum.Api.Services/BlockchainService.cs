@@ -23,6 +23,7 @@ namespace Lykke.Service.Qtum.Api.Services
     {
         private readonly Network _network;
         private readonly IInsightApiService _insightApiService;
+        private readonly IFeeService _feeService;
         private readonly ISpentOutputRepository<IOutput> _spentOutputRepository;
 
         private const int RetryCount = 4;
@@ -31,11 +32,12 @@ namespace Lykke.Service.Qtum.Api.Services
 
         private readonly Policy _policy;
 
-        public BlockchainService(Network network, IInsightApiService insightApiService, ISpentOutputRepository<IOutput> spentOutputRepository)
+        public BlockchainService(Network network, IInsightApiService insightApiService, ISpentOutputRepository<IOutput> spentOutputRepository, IFeeService feeService)
         {
             _network = network;
             _insightApiService = insightApiService;
             _spentOutputRepository = spentOutputRepository;
+            _feeService = feeService;
 
             _policy = Policy
                 .Handle<HttpRequestException>()
@@ -219,8 +221,8 @@ namespace Lykke.Service.Qtum.Api.Services
                    .Send(destination, amount)
                    .SetChange(changeDestination);
 
-            
-            var calculatedFee = Money.Satoshis(400000); // TODO use async feeservice instead
+
+            var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder);
             var requiredBalance = amount + (includeFee ? Money.Zero : calculatedFee);
 
             if (balance < requiredBalance)
