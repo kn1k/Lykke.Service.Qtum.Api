@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
 
@@ -45,5 +46,9 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="transactionObservation"></param>
         /// <returns>A Task object that represents the asynchronous operation</returns>
         Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation);
+        
+        Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId);
+        
+        Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId);
     }
 }

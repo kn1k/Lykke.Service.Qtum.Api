@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Log;
@@ -129,27 +130,27 @@ namespace Lykke.Service.Qtum.Api.Services
                             else
                             {
                                 txMeta.TxId = broadcactResult.txId;
+                                
+                                var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                                if (txInfo != null)
+                                {
+                                    if (txInfo.Confirmations > minConfirmations)
+                                    {
+                                        txMeta.State = TransactionState.Confirmed;
+                                        txMeta.Hash = txInfo.Blockhash;
+                                        txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                                        txMeta.BlockCount = txInfo.Blockheight;
+                                    }
+                                }
+                                else
+                                {
+                                    txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                                    txMeta.State = TransactionState.Failed;
+                                }
                             }
                         }
-
-                        var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
-
-                        if (txInfo != null)
-                        {
-                            if (txInfo.Confirmations > minConfirmations)
-                            {
-                                txMeta.State = TransactionState.Confirmed;
-                                txMeta.Hash = txInfo.Blockhash;
-                                txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
-                                txMeta.BlockCount = txInfo.Blockheight;
-                            }
-                        }
-                        else
-                        {
-                            txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
-                            txMeta.State = TransactionState.Failed;
-                        }
-
+                        
                         await UpdateTransactionMeta(txMeta);
                     }
                     catch (Exception e)
@@ -215,6 +216,18 @@ namespace Lykke.Service.Qtum.Api.Services
         public async Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation)
         {
             return await _transactionObservationRepository.DeleteIfExistAsync(transactionObservation);
+        }
+
+        /// <inheritdoc/>
+        public async Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId)
+        {
+            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vin.ToDictionary(x => x.Addr, x => x.Value.ToString());
+        }
+
+        /// <inheritdoc/>
+        public async Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId)
+        {
+            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vout.ToDictionary(x => x.ScriptPubKey.Addresses.FirstOrDefault(), x => x.Value.ToString());
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Common.Log;
@@ -26,7 +27,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
         private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>
             _transactionService;
 
-        public TransactionsController(ILogFactory logFactory, IBlockchainService blockchainService,
+        public TransactionsController(ILogFactory logFactory,
             ITransactionService<TransactionBody, TransactionMeta, TransactionObservation> transactionService,
             CoinConverter coinConverter)
         {
@@ -141,7 +142,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 {
                     BroadcastedTransactionState state;
                     BlockchainErrorCode? blockchainErrorCode = null;
-                    
+
                     switch (txMeta.State)
                     {
                         case TransactionState.Confirmed:
@@ -163,9 +164,9 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         OperationId = txMeta.OperationId,
                         State = state,
                         Timestamp = (txMeta.CompleteTimestamp ?? txMeta.BroadcastTimestamp).Value,
-                        Amount = txMeta.Amount != null ?_coinConverter.QtumToLykkeQtum(txMeta.Amount) : txMeta.Amount,
+                        Amount = txMeta.Amount != null ? _coinConverter.QtumToLykkeQtum(txMeta.Amount) : txMeta.Amount,
                         Fee = txMeta.Fee != null ? _coinConverter.QtumToLykkeQtum(txMeta.Fee) : txMeta.Fee,
-                        Hash = txMeta.Hash,
+                        Hash = txMeta.TxId,
                         Error = txMeta.Error,
                         ErrorCode = blockchainErrorCode,
                         Block = txMeta.BlockCount
@@ -191,9 +192,56 @@ namespace Lykke.Service.Qtum.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
         [ProducesResponseType(typeof(BlockchainErrorResponse), (int) HttpStatusCode.BadRequest)]
-        public IActionResult GetBroadcastedManyInputsTransaction(string operationId)
+        public async Task<IActionResult> GetBroadcastedManyInputsTransaction(string operationId)
         {
-            return StatusCode((int) HttpStatusCode.NotImplemented);
+            if (ModelState.IsValidOperationIdParameter(operationId))
+            {
+                var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
+                if (txMeta != null)
+                {
+                    BroadcastedTransactionState state;
+                    BlockchainErrorCode? blockchainErrorCode = null;
+
+                    switch (txMeta.State)
+                    {
+                        case TransactionState.Confirmed:
+                            state = BroadcastedTransactionState.Completed;
+                            break;
+                        case TransactionState.Failed:
+                        case TransactionState.BlockChainFailed:
+                            state = BroadcastedTransactionState.Failed;
+                            //TODO: support other code
+                            blockchainErrorCode = BlockchainErrorCode.Unknown;
+                            break;
+                        default:
+                            state = BroadcastedTransactionState.InProgress;
+                            break;
+                    }
+
+                    return Ok(new BroadcastedTransactionWithManyInputsResponse
+                    {
+                        OperationId = txMeta.OperationId,
+                        State = state,
+                        Timestamp = (txMeta.CompleteTimestamp ?? txMeta.BroadcastTimestamp).Value,
+                        Fee = txMeta.Fee != null ? _coinConverter.QtumToLykkeQtum(txMeta.Fee) : txMeta.Fee,
+                        Hash = txMeta.TxId,
+                        Error = txMeta.Error,
+                        ErrorCode = blockchainErrorCode,
+                        Block = txMeta.BlockCount,
+                        Inputs = txMeta.TxId != null ? (await _transactionService.GetTransactionInputsAsync(txMeta.TxId)).Select(x => new BroadcastedTransactionInputContract
+                        {
+                            FromAddress = x.Key,
+                            Amount = _coinConverter.QtumToLykkeQtum(x.Value)
+                        }).ToList() : null
+                    });
+                }
+                else
+                    return StatusCode((int) HttpStatusCode.NoContent);
+            }
+            else
+            {
+                return StatusCode((int) HttpStatusCode.BadRequest, ModelState.ToErrorResponse());
+            }
         }
 
 
@@ -208,9 +256,56 @@ namespace Lykke.Service.Qtum.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
         [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
         [ProducesResponseType(typeof(BlockchainErrorResponse), (int) HttpStatusCode.BadRequest)]
-        public IActionResult GetBroadcastedManyOutputsTransaction(string operationId)
+        public async Task<IActionResult> GetBroadcastedManyOutputsTransaction(string operationId)
         {
-            return StatusCode((int) HttpStatusCode.NotImplemented);
+            if (ModelState.IsValidOperationIdParameter(operationId))
+            {
+                var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
+                if (txMeta != null)
+                {
+                    BroadcastedTransactionState state;
+                    BlockchainErrorCode? blockchainErrorCode = null;
+
+                    switch (txMeta.State)
+                    {
+                        case TransactionState.Confirmed:
+                            state = BroadcastedTransactionState.Completed;
+                            break;
+                        case TransactionState.Failed:
+                        case TransactionState.BlockChainFailed:
+                            state = BroadcastedTransactionState.Failed;
+                            //TODO: support other code
+                            blockchainErrorCode = BlockchainErrorCode.Unknown;
+                            break;
+                        default:
+                            state = BroadcastedTransactionState.InProgress;
+                            break;
+                    }
+
+                    return Ok(new BroadcastedTransactionWithManyOutputsResponse
+                    {
+                        OperationId = txMeta.OperationId,
+                        State = state,
+                        Timestamp = (txMeta.CompleteTimestamp ?? txMeta.BroadcastTimestamp).Value,
+                        Fee = txMeta.Fee != null ? _coinConverter.QtumToLykkeQtum(txMeta.Fee) : txMeta.Fee,
+                        Hash = txMeta.TxId,
+                        Error = txMeta.Error,
+                        ErrorCode = blockchainErrorCode,
+                        Block = txMeta.BlockCount,
+                        Outputs = txMeta.TxId != null ? (await _transactionService.GetTransactionInputsAsync(txMeta.TxId)).Select(x => new BroadcastedTransactionOutputContract
+                        {
+                            ToAddress = x.Key,
+                            Amount = _coinConverter.QtumToLykkeQtum(x.Value)
+                        }).ToList() : null
+                    });
+                }
+                else
+                    return StatusCode((int) HttpStatusCode.NoContent);
+            }
+            else
+            {
+                return StatusCode((int) HttpStatusCode.BadRequest, ModelState.ToErrorResponse());
+            }
         }
 
         /// <summary>
