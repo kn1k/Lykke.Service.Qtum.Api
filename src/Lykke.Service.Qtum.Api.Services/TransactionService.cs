@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Log;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
+using Lykke.Service.Qtum.Api.Core.Helpers;
 using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
 using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
@@ -30,7 +31,12 @@ namespace Lykke.Service.Qtum.Api.Services
         private readonly ISpentOutputRepository<TOutput> _spentOutputRepository;
         private readonly IBlockchainService _blockchainService;
 
-        public TransactionService(ILogFactory logFactory, ITransactionBodyRepository<TTransactionBody> transactionBodyRepository, ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository, ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository, IBlockchainService blockchainService, ISpentOutputRepository<TOutput> spentOutputRepository)
+        public TransactionService(ILogFactory logFactory,
+            ITransactionBodyRepository<TTransactionBody> transactionBodyRepository,
+            ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository,
+            ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository,
+            ISpentOutputRepository<TOutput> spentOutputRepository,
+            IBlockchainService blockchainService)
         {
             _transactionBodyRepository = transactionBodyRepository;
             _transactionMetaRepository = transactionMetaRepository;
@@ -207,6 +213,189 @@ namespace Lykke.Service.Qtum.Api.Services
             var usedCoins = tx.Inputs.Select(input => coins.First(o => o.Outpoint == input.PrevOut)).ToArray();
 
             return Serializer.ToString<(Transaction, ICoin[])>((tx, usedCoins));
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> IsTransactionObservedAsync(TTransactionObservation transactionObservation)
+        {
+            return await _transactionObservationRepository.IsExistAsync(transactionObservation);
+        }
+
+        /// <inheritdoc/>
+        public async Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation)
+        {
+            return await _transactionObservationRepository.DeleteIfExistAsync(transactionObservation);
+        }
+
+        /// <inheritdoc/>
+        public async Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId)
+        {
+            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vin.ToDictionary(x => x.Addr, x => x.Value.ToString());
+        }
+
+        /// <inheritdoc/>
+        public async Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId)
+        {
+            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vout.ToDictionary(x => x.ScriptPubKey.Addresses.FirstOrDefault(), x => x.Value.ToString());
+        }
+
+        /// <summary>
+        /// Update transaction meta
+        /// </summary>
+        /// <param name="transactionMeta">Transaction body</param>
+        /// <returns>A Task object that represents the asynchronous operation</returns>
+        private Task UpdateTransactionMeta(TTransactionMeta transactionMeta)
+        {
+            return _transactionMetaRepository.UpdateAsync(transactionMeta);
+        }
+
+        /// <summary>
+        /// Observe tansaction
+        /// </summary>
+        /// <param name="transactionObservation">Transaction observation</param>
+        /// <returns>true if created, false if existed before</returns>
+        private async Task<bool> CreateObservationAsync(TTransactionObservation transactionObservation)
+        {
+            return await _transactionObservationRepository.CreateIfNotExistsAsync(transactionObservation);
+        }
+
+        /// <summary>
+        /// Get observed transaction
+        /// </summary>
+        /// <param name="pageSize">Abount of transaction observation</param>
+        /// <param name="continuation">ontinuation data</param>
+        /// <returns>ontinuation data and transaction observation</returns>
+        public async Task<(string continuation, IEnumerable<TTransactionObservation> items)>
+            GetTransactionObservationAsync(int pageSize, string continuation)
+        {
+            return await _transactionObservationRepository.GetAsync(pageSize, continuation);
+        }
+        
+        /// <inheritdoc/>
+        public async Task<bool> BroadcastSignedTransactionAsync(Guid operationId, string signedTransaction)
+        {
+            var txMeta = await GetTransactionMetaAsync(operationId.ToString());
+
+            if (await IsTransactionAlreadyBroadcastAsync(operationId))
+            {
+                _log.Info(nameof(BroadcastSignedTransactionAsync),
+                    JObject.FromObject(txMeta).ToString(),
+                    "TxMeta already broadcasted or failed, with id: {operationId}");
+                return false;
+            }
+
+            if (txMeta == null)
+            {
+                txMeta = new TTransactionMeta
+                {
+                    OperationId = operationId
+                };
+            }
+
+            TTransactionBody transactionBody = await GetTransactionBodyByIdAsync(operationId);
+            if (transactionBody == null)
+            {
+                transactionBody = new TTransactionBody
+                {
+                    OperationId = operationId
+                };
+            }
+
+            transactionBody.SignedTransaction = signedTransaction;
+
+            await UpdateTransactionBodyAsync(transactionBody);
+
+            txMeta.State = TransactionState.Signed;
+            txMeta.BroadcastTimestamp = DateTime.Now;
+            await UpdateTransactionMeta(txMeta);
+
+            TTransactionObservation transactionObservation = new TTransactionObservation
+            {
+                OperationId = operationId
+            };
+
+            await CreateObservationAsync(transactionObservation);
+
+            _log.Info(nameof(BroadcastSignedTransactionAsync),
+                JObject.FromObject(transactionObservation).ToString(),
+                $"Observe new transaction, with id: {operationId}");
+
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 20, int pageSize = 10)
+        {
+            string continuation = null;
+            do
+            {
+                var transactionObservations = await GetTransactionObservationAsync(pageSize, continuation);
+
+                foreach (var transactionObservation in transactionObservations.items)
+                {
+                    try
+                    {
+                        var txMeta =
+                            await GetTransactionMetaAsync(transactionObservation.OperationId
+                                .ToString());
+
+                        if (txMeta.State == TransactionState.Signed)
+                        {
+                            var txBody =
+                                await GetTransactionBodyByIdAsync(transactionObservation.OperationId);
+                            var broadcactResult =
+                                await _blockchainService.BroadcastSignedTransactionAsync(txBody.SignedTransaction);
+
+                            if (broadcactResult.error != null)
+                            {
+                                txMeta.Error = broadcactResult.error;
+                                txMeta.State = TransactionState.Failed;
+                            }
+                            else
+                            {
+                                txMeta.TxId = broadcactResult.txId;
+                                
+                                var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                                if (txInfo != null)
+                                {
+                                    if (txInfo.Confirmations > minConfirmations)
+                                    {
+                                        txMeta.State = TransactionState.Confirmed;
+                                        txMeta.Hash = txInfo.Blockhash;
+                                        txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                                        txMeta.BlockCount = txInfo.Blockheight;
+                                    }
+                                }
+                                else
+                                {
+                                    txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                                    txMeta.State = TransactionState.Failed;
+                                }
+                            }
+                        }
+                        
+                        await UpdateTransactionMeta(txMeta);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error($"failed to update tx info for operation: {transactionObservation.OperationId}", e);
+                    }
+
+                }
+
+                continuation = transactionObservations.continuation;
+            } while (continuation != null);
+        }
+
+        /// <summary>
+        /// Update transaction body
+        /// </summary>
+        /// <param name="transactionBody">Transaction body</param>
+        /// <returns>A Task object that represents the asynchronous operation</returns>
+        private Task UpdateTransactionBodyAsync(TTransactionBody transactionBody)
+        {
+            return _transactionBodyRepository.UpdateAsync(transactionBody);
         }
     }
 }

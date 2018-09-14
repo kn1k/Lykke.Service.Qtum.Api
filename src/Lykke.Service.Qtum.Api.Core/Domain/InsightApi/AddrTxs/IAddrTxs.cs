@@ -9,6 +9,6 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs
         int TotalItems { get; set; }
         int From { get; set; }
         int To { get; set; }
-        IItem[] Items { get; set; }
+        ITxInfo[] Items { get; set; }
     }
 }

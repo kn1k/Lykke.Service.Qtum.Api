@@ -38,6 +38,10 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="id">Operation Id</param>
         /// <returns>Transaction meta</returns>
         Task<TTransactionMeta> GetTransactionMetaAsync(string id);
+        /// </summary>
+        /// <param name="transactionObservation">Transaction observation</param>
+        /// <returns>true if already observed</returns>
+        Task<bool> IsTransactionObservedAsync(TTransactionObservation transactionObservation);
 
         /// <summary>
         /// Get transaction body by operation id
@@ -77,5 +81,33 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="includeFee">Flag indicates that transaction should incude fee</param>
         /// <returns>Unsined transaction</returns>
         Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee);
+        
+        /// <summary>
+        /// Publish signed transaction to network
+        /// </summary>
+        /// <param name="operationId">Operation Id</param>
+        /// <param name="signedTransaction">Signed transaction</param>
+        /// <returns>true if publish, false if already publish</returns>
+        Task<bool> BroadcastSignedTransactionAsync(Guid operationId, string signedTransaction);
+
+        /// <summary>
+        /// Broadcast transactions to network
+        /// </summary>
+        /// <param name="minConfirmations">Min confirmation count to transaction complete</param>
+        /// <param name="pageSize">Update page size</param>
+        /// <returns><see cref="Task"/></returns>
+        Task BroadcastSignedTransactionsAsync(long minConfirmations = 20, int pageSize = 10);
+        
+        /// <summary>
+        /// Stop observe trancaction
+        /// </summary>
+        /// <param name="transactionObservation"></param>
+        /// <returns>A Task object that represents the asynchronous operation</returns>
+        Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation);
+        
+        Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId);
+        
+        Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId);
+
     }
 }

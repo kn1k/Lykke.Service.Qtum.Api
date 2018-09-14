@@ -21,6 +21,20 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address <see cref="BitcoinAddress"/></param>
         /// <returns>Address utxo list <see cref="IUtxo"/></returns>
         Task<List<IUtxo>> GetUtxoAsync(BitcoinAddress address);
+        
+        /// <summary>
+        /// Transaction broadcasting
+        /// </summary>
+        /// <param name="rawtx">Signed transaction as hex string</param>
+        /// <returns></returns>
+        Task<(ITxId txId, IErrorResponse error)> TxSendAsync(IRawTx rawtx);
+        
+        /// <summary>
+        /// Get transaction info by id
+        /// </summary>
+        /// <param name="txId">Transaction id</param>
+        /// <returns><see cref="ITxInfo"/></returns>
+        Task<ITxInfo> GetTxByIdAsync(ITxId txId);
 
         /// <summary>
         /// Get transactions info for specified address
@@ -28,7 +42,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address <see cref="BitcoinAddress"></param>
         /// <param name="from">Paging from setting</param>
         /// <param name="to">Paging to setting</param>
-        /// <returns>Transactions info list <see cref="IItem"></returns>
+        /// <returns>Transactions info list <see cref="ITxInfo"></returns>
         Task<IAddrTxs> GetAddrTxsAsync(BitcoinAddress address, int from = 0, int to = 50);
     }
 }

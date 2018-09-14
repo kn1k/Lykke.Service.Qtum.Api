@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
@@ -8,6 +11,7 @@ using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Services.InsightApi;
 using Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs;
 using Lykke.Service.Qtum.Api.Services.InsightApi.Status;
+using Microsoft.AspNetCore.Http;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
 using RestSharp;
@@ -33,9 +37,13 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return JObject.Parse(response.Content).ToObject<AddrTxs>();
             }
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
+                throw new ArgumentException(response.Content, response.ErrorException);
             }
         }   
 
@@ -50,10 +58,14 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return JObject.Parse(response.Content).ToObject<Status>();
             }
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
-            }       
+                throw new ArgumentException(response.Content, response.ErrorException);
+            }
         }
 
         /// <inheritdoc/>
@@ -67,10 +79,69 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 return response.Data.Select(x => (IUtxo) x).ToList();
             }
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
             else
             {
-                throw response.ErrorException;
-            }   
+                throw new ArgumentException(response.Content, response.ErrorException);
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<(ITxId txId, IErrorResponse error)> TxSendAsync(IRawTx rawTx)
+        {
+            var client = new RestClient($"{_url}/tx/send");
+            var request = new RestRequest(Method.POST);
+
+            var jRawTx = JObject.FromObject(rawTx);
+
+            request.AddParameter("application/json; charset=utf-8", jRawTx.ToString(), ParameterType.RequestBody);
+
+            var response = await client.ExecuteTaskAsync<TxId>(request);
+
+            if (response.IsSuccessful)
+            {
+                return (response.Data, null);
+            }
+            else
+            {
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    return (null, new ErrorResponse {error = response.Content});
+                }
+                if (response.ResponseStatus == ResponseStatus.Error)
+                {
+                    throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+                }
+                else
+                {
+                    throw new ArgumentException(response.Content, response.ErrorException);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public async Task<ITxInfo> GetTxByIdAsync(ITxId txId)
+        {
+            var client = new RestClient($"{_url}/tx/{txId.txid}");
+            var request = new RestRequest(Method.GET);
+            var response = await client.ExecuteTaskAsync<TxInfo>(request);
+
+            if (response.IsSuccessful)
+            {
+                return response.Data;
+            }
+
+            if (response.ResponseStatus == ResponseStatus.Error)
+            {
+                throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
+            }
+            else
+            {
+                throw new ArgumentException(response.Content, response.ErrorException);
+            }
         }
     }
 }

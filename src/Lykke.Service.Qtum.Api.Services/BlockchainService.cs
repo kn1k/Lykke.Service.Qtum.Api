@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
 using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
 using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Services;
+using Lykke.Service.Qtum.Api.Services.InsightApi;
 using Lykke.Service.Qtum.Api.Services.Helpers;
 using NBitcoin;
 using NBitcoin.JsonConverters;
@@ -101,6 +103,30 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
+        public async Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction)
+        {
+            var policyResult = _policy.ExecuteAsync(async () =>
+            {
+                var result = await _insightApiService.TxSendAsync(new RawTx { rawtx = signedTransaction}); 
+                return (result.txId?.txid, result.error?.error);                          
+            });
+
+            return await policyResult;
+        }
+
+        /// <inheritdoc/>
+        public async Task<ITxInfo> GetTransactionInfoByIdAsync(string id)
+        {
+            var policyResult = _policy.ExecuteAsync(async () =>
+            {
+                var result = await _insightApiService.GetTxByIdAsync(new TxId { txid = id}); 
+                return result;                          
+            });
+
+            return await policyResult;
+        }
+
+        /// <inheritdoc/>
         public bool IsAddressValid(string address)
         {
             try
@@ -119,9 +145,9 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address)
+        public async Task<List<ITxInfo>> GetAddressTransactionsInfoAsync(BitcoinAddress address)
         {
-            List<IItem> result = null;
+            List<ITxInfo> result = null;
             const int pageSize = 50;
             int from = 0, to = from + pageSize;
 
@@ -138,7 +164,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 {
                     if (result == null)
                     {
-                        result = new List<IItem>();
+                        result = new List<ITxInfo>();
                     }
 
                     result.AddRange(policyResult.Items);
