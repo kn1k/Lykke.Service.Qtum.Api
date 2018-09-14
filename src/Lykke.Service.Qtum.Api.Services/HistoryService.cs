@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
 
 namespace Lykke.Service.Qtum.Api.Services
 {
@@ -141,7 +142,7 @@ namespace Lykke.Service.Qtum.Api.Services
             } while (continuation != null);
         }
 
-        private IAddressHistoryEntry GetAddressHistoryEntry(IItem tx, TAddressObservation addrObservation)
+        private IAddressHistoryEntry GetAddressHistoryEntry(ITxInfo tx, TAddressObservation addrObservation)
         {
             // need to process 1 -> n, n -> 1
             // but do it like in bitcoin* APIs
