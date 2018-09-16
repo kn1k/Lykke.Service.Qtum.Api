@@ -21,9 +21,9 @@ namespace Lykke.Service.Qtum.Api.Controllers
         {
             return new CapabilitiesResponse
             {
-                IsTransactionsRebuildingSupported = true,
-                AreManyInputsSupported = true,
-                AreManyOutputsSupported = true,
+                IsTransactionsRebuildingSupported = false,
+                AreManyInputsSupported = false,
+                AreManyOutputsSupported = false,
                 CanReturnExplorerUrl = true,
                 IsPublicAddressExtensionRequired = false,
                 IsReceiveTransactionRequired = false,
