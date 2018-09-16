@@ -7,7 +7,7 @@ namespace Lykke.Service.Qtum.Api.Services.InsightApi
     {
         public string Address { get; set; }
         public string Txid { get; set; }
-        public long Vout { get; set; }
+        public uint Vout { get; set; }
         public string ScriptPubKey { get; set; }
         public decimal Amount { get; set; }
         public string Satoshis { get; set; }

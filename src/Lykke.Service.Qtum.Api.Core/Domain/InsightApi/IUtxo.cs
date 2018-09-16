@@ -8,7 +8,7 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.InsightApi
 
         string Txid { get; set; }
 
-        long Vout { get; set; }
+        uint Vout { get; set; }
 
         string ScriptPubKey { get; set; }
 

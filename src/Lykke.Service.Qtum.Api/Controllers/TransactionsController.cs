@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.Log;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
 using Lykke.Service.Qtum.Api.Core.Helpers;
@@ -23,14 +25,15 @@ namespace Lykke.Service.Qtum.Api.Controllers
     {
         private readonly ILog _log;
         private readonly CoinConverter _coinConverter;
+        private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity> _transactionService;
+        private readonly IBlockchainService _blockchainService;
 
-        private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>
-            _transactionService;
-
-        public TransactionsController(ILogFactory logFactory,
-            ITransactionService<TransactionBody, TransactionMeta, TransactionObservation> transactionService,
+        public TransactionsController(ILogFactory logFactory, 
+            IBlockchainService blockchainService, 
+            ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity> transactionService,
             CoinConverter coinConverter)
         {
+            _blockchainService = blockchainService;
             _transactionService = transactionService;
             _coinConverter = coinConverter;
             _log = logFactory.CreateLog(this);
@@ -51,7 +54,40 @@ namespace Lykke.Service.Qtum.Api.Controllers
         public async Task<IActionResult> BuildNotSignedSingleSendTransactionAsync(
             [FromBody] BuildSingleTransactionRequest buildTransactionRequest)
         {
-            return StatusCode((int) HttpStatusCode.NotImplemented);
+            if (ModelState.IsBuildSingleTransactionRequestValid(buildTransactionRequest, _blockchainService))
+            {
+                if (await _transactionService.IsTransactionAlreadyBroadcastAsync(buildTransactionRequest.OperationId))
+                {
+                    return StatusCode((int)HttpStatusCode.Conflict,
+                        ErrorResponse.Create(
+                            "Transaction is already broadcasted or [DELETE] /api/transactions/broadcast/{operationId} is called"));
+                }
+
+                var balance = await _blockchainService.GetAddressBalanceAsync(_blockchainService.ParseAddress(buildTransactionRequest.FromAddress));
+
+                if (balance < BigInteger.Parse(buildTransactionRequest.Amount))
+                {
+                    return StatusCode((int)HttpStatusCode.BadRequest,
+                        BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+                }
+
+                var unsignTransaction = await _transactionService.GetUnsignSendTransactionAsync(
+                    buildTransactionRequest.OperationId, 
+                    buildTransactionRequest.FromAddress,
+                    buildTransactionRequest.ToAddress,
+                    buildTransactionRequest.Amount,
+                    buildTransactionRequest.AssetId,
+                    buildTransactionRequest.IncludeFee);
+
+                return StatusCode((int)HttpStatusCode.OK, new BuildTransactionResponse
+                {
+                    TransactionContext = unsignTransaction
+                });
+            }
+            else
+            {
+                return StatusCode((int)HttpStatusCode.BadRequest, ErrorResponse.Create("Invalid params"));
+            }
         }
 
         /// <summary>

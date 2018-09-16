@@ -2,6 +2,7 @@
 using Autofac;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Balances;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Balances;
@@ -92,8 +93,8 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                 .As<IInsightApiService>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
             
-            builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation>>()
-                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation>>();
+            builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>()
+                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>();
                         
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()

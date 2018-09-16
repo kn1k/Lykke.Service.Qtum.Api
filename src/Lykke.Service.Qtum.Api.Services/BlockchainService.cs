@@ -4,12 +4,16 @@ using System.Linq;
 using System.Net.Http;
 using System.Numerics;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
+using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
+using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Services.InsightApi;
+using Lykke.Service.Qtum.Api.Services.Helpers;
 using NBitcoin;
-
+using NBitcoin.JsonConverters;
 using Polly;
 
 namespace Lykke.Service.Qtum.Api.Services
@@ -21,7 +25,7 @@ namespace Lykke.Service.Qtum.Api.Services
     {
         private readonly Network _network;
         private readonly IInsightApiService _insightApiService;
-        
+
         private const int RetryCount = 4;
 
         private const int RetryTimeout = 1;
@@ -32,7 +36,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             _network = network;
             _insightApiService = insightApiService;
-            
+
             _policy = Policy
                 .Handle<HttpRequestException>()
                 .Or<TaskCanceledException>()
@@ -181,5 +185,24 @@ namespace Lykke.Service.Qtum.Api.Services
             
             return result;
         }
+
+        /// <inheritdoc/>
+        public async Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount)
+        {
+            var utxos = await _policy.ExecuteAsync(async () =>
+            {
+                return await _insightApiService.GetUtxoAsync(ParseAddress(address));
+            });
+
+            return utxos
+                    .Where(p => p.Confirmations >= minConfirmationCount)
+                    .Select(source =>
+                    {
+                        return new Coin(
+                            new OutPoint(uint256.Parse(source.Txid), source.Vout),
+                            new TxOut(new Money(ulong.Parse(source.Satoshis)),
+                            source.ScriptPubKey.ToScript()));
+                    }).ToList();
+        }        
     }
 }

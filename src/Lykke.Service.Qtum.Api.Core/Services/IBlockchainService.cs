@@ -60,6 +60,21 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="address">Address</param>
         /// <returns>List of transaction info items</returns>
         Task<List<ITxInfo>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
+                
+        /// <summary>
+        /// Get transaction info by id
+        /// </summary>
+        /// <param name="id">Transaction id</param>
+        /// <returns><see cref="ITxInfo"/></returns>
+        Task<ITxInfo> GetTransactionInfoByIdAsync(string id);
+        
+        /// <summary>
+        /// Get a list of unspent outputs
+        /// </summary>
+        /// <param name="address">Address for getting outputs</param>
+        /// <param name="minConfirmationCount"></param>
+        /// <returns></returns>
+        Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);
         
         /// <summary>
         /// Broadcast transaction to network
@@ -68,12 +83,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>Broadcast result (txId or error)</returns>
         Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction);
 
-        /// <summary>
-        /// Get transaction info by id
-        /// </summary>
-        /// <param name="id">Transaction id</param>
-        /// <returns><see cref="ITxInfo"/></returns>
-        Task<ITxInfo> GetTransactionInfoByIdAsync(string id);
     }
     
     public enum TransactionType
