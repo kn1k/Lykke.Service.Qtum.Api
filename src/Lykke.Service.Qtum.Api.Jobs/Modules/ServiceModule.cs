@@ -6,10 +6,12 @@ using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Balances;
+using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.AzureRepositories.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Helpers;
 using Lykke.Service.Qtum.Api.Core.Repositories.Addresses;
 using Lykke.Service.Qtum.Api.Core.Repositories.Balances;
+using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers;
@@ -73,6 +75,10 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             builder.RegisterType<TransactionObservationRepository>()
                 .As<ITransactionObservationRepository<TransactionObservation>>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.QtumApiService.Db.DataConnString)));
+
+            builder.RegisterType<SpentOutputRepository>()
+                .As<ISpentOutputRepository<SpentOutputEntity>>()
+                .WithParameter(TypedParameter.From(dataConnString));
             
             // Services setup
             builder.RegisterType<AssetService>()
