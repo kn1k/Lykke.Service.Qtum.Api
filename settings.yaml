@@ -11,6 +11,19 @@ QtumApiService:
             types:
                 - AzureTableStorage      
                 - Tag
+FeeSettings:
+    FeePerByte:
+        settings-key: "QtumApiService-FeePerByte"
+        types:
+            - Tag
+    MinFeeValueSatoshi:
+        settings-key: "QtumApiService-MinFeeValueSatoshi"
+        types:
+            - Tag
+    MaxFeeValueSatoshi:
+        settings-key: "QtumApiService-MaxFeeValueSatoshi"
+        types:
+            - Tag
 Network: 
     settings-key: "QtumApiService-Network"
     types:

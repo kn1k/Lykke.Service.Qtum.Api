@@ -11,6 +11,8 @@ namespace Lykke.Service.Qtum.Api.Settings
     {
         public QtumApiSettings QtumApiService { get; set; }
         
+        public FeeSettings FeeSettings { get; set; }
+              
         [JsonConverter(typeof(StringEnumConverter))]
         public string Network{ get; set; }
         
