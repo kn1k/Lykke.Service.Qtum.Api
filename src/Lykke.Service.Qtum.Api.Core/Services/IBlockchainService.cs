@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
+using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
 using NBitcoin;
 
@@ -58,18 +59,15 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// </summary>
         /// <param name="address">Address</param>
         /// <returns>List of transaction info items</returns>
-        Task<List<IItem>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
-
+        Task<List<ITxInfo>> GetAddressTransactionsInfoAsync(BitcoinAddress address);
+                
         /// <summary>
-        /// Build unsined send transaction
+        /// Get transaction info by id
         /// </summary>
-        /// <param name="fromAddress">Address from</param>
-        /// <param name="toAddress">Address to</param>
-        /// <param name="amount">Amount</param>
-        /// <param name="includeFee">Flag indicates that transaction should incude fee</param>
-        /// <returns>Unsined transaction</returns>
-        Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee);
-
+        /// <param name="id">Transaction id</param>
+        /// <returns><see cref="ITxInfo"/></returns>
+        Task<ITxInfo> GetTransactionInfoByIdAsync(string id);
+        
         /// <summary>
         /// Get a list of unspent outputs
         /// </summary>
@@ -77,14 +75,14 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <param name="minConfirmationCount"></param>
         /// <returns></returns>
         Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);
-
+        
         /// <summary>
-        /// Get unspent outputs for the address
+        /// Broadcast transaction to network
         /// </summary>
-        /// <param name="address"></param>
-        /// <param name="confirmationsCount"></param>
-        /// <returns></returns>
-        Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0);
+        /// <param name="signedTransaction">Signed transaction</param>
+        /// <returns>Broadcast result (txId or error)</returns>
+        Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction);
+
     }
     
     public enum TransactionType

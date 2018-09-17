@@ -22,6 +22,10 @@ namespace Lykke.Service.Qtum.Api.Core.Domain.Transactions
         string Error { get; set; }
 
         string Hash { get; set; }
+        
+        string TxId { get; set; }
+        
+        string Fee { get; set; }
 
         Int64 BlockCount { get; set; }
 
