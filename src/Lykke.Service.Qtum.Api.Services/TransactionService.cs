@@ -30,19 +30,21 @@ namespace Lykke.Service.Qtum.Api.Services
         private readonly ITransactionObservationRepository<TTransactionObservation> _transactionObservationRepository;
         private readonly ISpentOutputRepository<TOutput> _spentOutputRepository;
         private readonly IBlockchainService _blockchainService;
+        private readonly IFeeService _feeService;
 
         public TransactionService(ILogFactory logFactory,
             ITransactionBodyRepository<TTransactionBody> transactionBodyRepository,
             ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository,
             ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository,
             ISpentOutputRepository<TOutput> spentOutputRepository,
-            IBlockchainService blockchainService)
+            IBlockchainService blockchainService, IFeeService feeService)
         {
             _transactionBodyRepository = transactionBodyRepository;
             _transactionMetaRepository = transactionMetaRepository;
             _transactionObservationRepository = transactionObservationRepository;
             _spentOutputRepository = spentOutputRepository;
             _blockchainService = blockchainService;
+            _feeService = feeService;
             _log = logFactory.CreateLog(this);
         }
 
@@ -193,7 +195,7 @@ namespace Lykke.Service.Qtum.Api.Services
                    .SetChange(changeDestination);
 
 
-            var calculatedFee = Money.Satoshis(400000); // TODO use async feeservice instead
+            var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder);
             var requiredBalance = amount + (includeFee ? Money.Zero : calculatedFee);
 
             if (balance < requiredBalance)

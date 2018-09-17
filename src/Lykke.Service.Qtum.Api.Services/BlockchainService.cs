@@ -20,7 +20,6 @@ namespace Lykke.Service.Qtum.Api.Services
     {
         private readonly Network _network;
         private readonly IInsightApiService _insightApiService;
-        private readonly IFeeService _feeService;
 
         private const int RetryCount = 4;
 
@@ -32,7 +31,6 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             _network = network;
             _insightApiService = insightApiService;
-            _feeService = feeService;
 
             _policy = Policy
                 .Handle<HttpRequestException>()
