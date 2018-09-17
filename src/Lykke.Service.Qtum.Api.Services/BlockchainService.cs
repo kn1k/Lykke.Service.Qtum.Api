@@ -4,16 +4,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Numerics;
 using System.Threading.Tasks;
-using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
-using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
-using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi;
-using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Services.InsightApi;
 using Lykke.Service.Qtum.Api.Services.Helpers;
 using NBitcoin;
-using NBitcoin.JsonConverters;
 using Polly;
 
 namespace Lykke.Service.Qtum.Api.Services
