@@ -117,6 +117,12 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                 .As<IStartable>()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();
+            
+            builder.RegisterType<FeeService>()
+                .As<IFeeService>()
+                .WithParameter("feePerByte", _appSettings.Nested(s => s.FeeSettings.FeePerByte).CurrentValue)
+                .WithParameter("minFeeValueSatoshi", _appSettings.Nested(s => s.FeeSettings.MinFeeValueSatoshi).CurrentValue)
+                .WithParameter("maxFeeValueSatoshi", _appSettings.Nested(s => s.FeeSettings.MaxFeeValueSatoshi).CurrentValue);
         }
     }
 }
