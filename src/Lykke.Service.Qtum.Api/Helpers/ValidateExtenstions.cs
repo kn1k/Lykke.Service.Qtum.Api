@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
-using Common;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.WindowsAzure.Storage.Table;
+using NBitcoin;
 using Newtonsoft.Json;
+using Utils = Common.Utils;
 
 namespace Lykke.Service.Qtum.Api.Helpers
 {
@@ -111,6 +112,42 @@ namespace Lykke.Service.Qtum.Api.Helpers
             }
 
             return true;
+        }
+        
+        /// <summary>
+        /// Validate broadcasted signed transaction
+        /// </summary>
+        /// <param name="self">Validation information <see cref="ModelStateDictionary"/></param>
+        /// <param name="broadcastTransactionRequest"><see cref="BroadcastTransactionRequest"/></param>
+        /// <returns>Is broadcasted signed transaction valid</returns>
+        public static bool IsValid(this ModelStateDictionary self, BroadcastTransactionRequest broadcastTransactionRequest)
+        {
+            try
+            {
+                if (broadcastTransactionRequest.SignedTransaction == null)
+                {
+                    self.AddModelError(nameof(broadcastTransactionRequest.SignedTransaction), "Can't be null");
+
+                    return false;
+                }
+
+                var transaction = new Transaction(broadcastTransactionRequest.SignedTransaction);
+
+                if (broadcastTransactionRequest.OperationId.Equals(Guid.Empty))
+                {
+                    self.AddModelError(nameof(broadcastTransactionRequest.OperationId), "Can't be Empty");
+
+                    return false;
+                }
+
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                self.AddModelError(nameof(broadcastTransactionRequest.OperationId), e.Message);
+                return false;
+            }
         }
 
         /// <summary>

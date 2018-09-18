@@ -71,18 +71,28 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
                 }
 
-                var unsignTransaction = await _transactionService.GetUnsignSendTransactionAsync(
-                    buildTransactionRequest.OperationId, 
-                    buildTransactionRequest.FromAddress,
-                    buildTransactionRequest.ToAddress,
-                    _coinConverter.LykkeQtumToQtum(buildTransactionRequest.Amount),
-                    buildTransactionRequest.AssetId,
-                    buildTransactionRequest.IncludeFee);
-
-                return StatusCode((int)HttpStatusCode.OK, new BuildTransactionResponse
+                try
                 {
-                    TransactionContext = unsignTransaction
-                });
+                    var unsignTransaction = await _transactionService.GetUnsignSendTransactionAsync(
+                        buildTransactionRequest.OperationId, 
+                        buildTransactionRequest.FromAddress,
+                        buildTransactionRequest.ToAddress,
+                        _coinConverter.LykkeQtumToQtum(buildTransactionRequest.Amount),
+                        buildTransactionRequest.AssetId,
+                        buildTransactionRequest.IncludeFee);
+
+                    return StatusCode((int)HttpStatusCode.OK, new BuildTransactionResponse
+                    {
+                        TransactionContext = unsignTransaction
+                    });
+                }
+                catch (NBitcoin.NotEnoughFundsException e)
+                {
+                    _log.Error(e);
+                    return StatusCode((int)HttpStatusCode.BadRequest,
+                        BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+                }
+                
             }
             else
             {
@@ -139,7 +149,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
         public async Task<IActionResult> BroadcastSignedTransactionAsync(
             [FromBody] BroadcastTransactionRequest broadcastTransactionRequest)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid(broadcastTransactionRequest))
             {
                 return BadRequest(ModelState.ToErrorResponse("Transaction invalid"));
             }

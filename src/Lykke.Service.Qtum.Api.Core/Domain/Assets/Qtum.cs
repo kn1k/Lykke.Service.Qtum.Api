@@ -20,7 +20,7 @@
         /// <inheritdoc/>
         public int Accuracy
         {
-            get => 8;
+            get => 0;
         }
 
         /// <inheritdoc/>

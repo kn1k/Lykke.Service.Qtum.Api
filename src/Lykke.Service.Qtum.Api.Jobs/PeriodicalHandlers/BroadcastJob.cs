@@ -30,7 +30,12 @@ namespace Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers
             try
             {
                 _log.Info("BroadcastJob start");
-                await _transactionService.BroadcastSignedTransactionsAsync();
+#if DEBUG
+                await _transactionService.BroadcastSignedTransactionsAsync(1);
+#else
+            await _transactionService.BroadcastSignedTransactionsAsync();
+#endif
+                
                 _log.Info("BroadcastJob finished");
             }
             catch (Exception ex)

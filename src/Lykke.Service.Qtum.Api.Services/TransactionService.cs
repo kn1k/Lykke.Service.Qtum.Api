@@ -207,6 +207,10 @@ namespace Lykke.Service.Qtum.Api.Services
                     throw new Exception($"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
                 //builder.SubtractFees(); // TODO it needs new version on nbitcoin
                 amount = amount - calculatedFee;
+                builder = new TransactionBuilder();
+                builder.AddCoins(coins)
+                    .Send(destination, amount)
+                    .SetChange(changeDestination);
             }
 
             builder.SendFees(calculatedFee);
@@ -356,24 +360,28 @@ namespace Lykke.Service.Qtum.Api.Services
                             else
                             {
                                 txMeta.TxId = broadcactResult.txId;
-                                
-                                var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+                                txMeta.State = TransactionState.Broadcasted;
+                            }
+                        }
 
-                                if (txInfo != null)
+                        if (txMeta.State == TransactionState.Broadcasted)
+                        {
+                            var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                            if (txInfo != null)
+                            {
+                                if (txInfo.Confirmations >= minConfirmations)
                                 {
-                                    if (txInfo.Confirmations > minConfirmations)
-                                    {
-                                        txMeta.State = TransactionState.Confirmed;
-                                        txMeta.Hash = txInfo.Blockhash;
-                                        txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
-                                        txMeta.BlockCount = txInfo.Blockheight;
-                                    }
+                                    txMeta.State = TransactionState.Confirmed;
+                                    txMeta.Hash = txInfo.Blockhash;
+                                    txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                                    txMeta.BlockCount = txInfo.Blockheight;
                                 }
-                                else
-                                {
-                                    txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
-                                    txMeta.State = TransactionState.Failed;
-                                }
+                            }
+                            else
+                            {
+                                txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                                txMeta.State = TransactionState.Failed;
                             }
                         }
                         
