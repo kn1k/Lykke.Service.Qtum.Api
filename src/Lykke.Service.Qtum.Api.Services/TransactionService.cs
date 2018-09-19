@@ -330,7 +330,7 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 20, int pageSize = 10)
+        public async Task BroadcastSignedTransactionsAsync(long minConfirmations = 2, int pageSize = 10)
         {
             string continuation = null;
             do
