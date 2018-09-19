@@ -127,11 +127,11 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var client = new RestClient($"{_url}/tx/{txId.txid}");
             var request = new RestRequest(Method.GET);
-            var response = await client.ExecuteTaskAsync<TxInfo>(request);
+            var response = await client.ExecuteTaskAsync(request);
 
             if (response.IsSuccessful)
             {
-                return response.Data;
+                return JObject.Parse(response.Content).ToObject<TxInfo>();
             }
 
             if (response.ResponseStatus == ResponseStatus.Error)
