@@ -109,5 +109,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         
         Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId);
 
+        Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId);
+
     }
 }

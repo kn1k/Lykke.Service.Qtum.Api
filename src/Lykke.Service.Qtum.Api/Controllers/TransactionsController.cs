@@ -164,6 +164,14 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         "Transaction with specified operationId and signedTransaction has already been broadcasted"));
             }
 
+            var txMeta = await _transactionService.UpdateTrancactionBroadcastStatusAsync(broadcastTransactionRequest.OperationId);
+
+            if (txMeta.State == TransactionState.Failed && txMeta.Error.Equals("258: txn-mempool-conflict. Code:-26"))
+            {
+                return StatusCode((int) HttpStatusCode.BadRequest,
+                    ErrorResponse.Create(
+                        "buildingShouldBeRepeated"));
+            }
             _log.Info(nameof(BroadcastSignedTransactionAsync),
                 JObject.FromObject(broadcastTransactionRequest).ToString(),
                 $"Transaction broadcasted {broadcastTransactionRequest.OperationId}");
@@ -182,10 +190,12 @@ namespace Lykke.Service.Qtum.Api.Controllers
         public async Task<IActionResult> GetBroadcastedSingleTransactionAsync(string operationId)
         {
             if (ModelState.IsValidOperationIdParameter(operationId))
-            {
+            {               
                 var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
                 if (txMeta != null)
                 {
+                    txMeta = await _transactionService.UpdateTrancactionBroadcastStatusAsync(new Guid(operationId));
+                    
                     BroadcastedTransactionState state;
                     BlockchainErrorCode? blockchainErrorCode = null;
 
@@ -198,7 +208,15 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         case TransactionState.BlockChainFailed:
                             state = BroadcastedTransactionState.Failed;
                             //TODO: support other code
-                            blockchainErrorCode = BlockchainErrorCode.Unknown;
+
+                            if (txMeta.Error.Equals("258: txn-mempool-conflict. Code:-26"))
+                            {
+                                blockchainErrorCode = BlockchainErrorCode.BuildingShouldBeRepeated;
+                            }
+                            else
+                            {
+                                blockchainErrorCode = BlockchainErrorCode.Unknown; 
+                            }
                             break;
                         default:
                             state = BroadcastedTransactionState.InProgress;

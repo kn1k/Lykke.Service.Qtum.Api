@@ -9,22 +9,25 @@ using Lykke.Service.Qtum.Api.Core.Services;
 
 namespace Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers
 {
-    public class BroadcastJob: TimerPeriod
+    public class BroadcastJob : TimerPeriod
     {
         private readonly ILog _log;
-        private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>
+
+        private readonly ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity
+            >
             _transactionService;
-        
+
         public BroadcastJob(
-            TimeSpan period, 
-            ILogFactory logFactory, 
-            ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity> transactionService, 
+            TimeSpan period,
+            ILogFactory logFactory,
+            ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>
+                transactionService,
             string componentName = null) : base(period, logFactory, componentName)
         {
             _transactionService = transactionService;
             _log = logFactory.CreateLog(this);
         }
-        
+
         public override async Task Execute()
         {
             try
@@ -33,16 +36,15 @@ namespace Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers
 #if DEBUG
                 await _transactionService.BroadcastSignedTransactionsAsync(1);
 #else
-            await _transactionService.BroadcastSignedTransactionsAsync(1);
+                await _transactionService.BroadcastSignedTransactionsAsync(1);
 #endif
-                
+
                 _log.Info("BroadcastJob finished");
             }
             catch (Exception ex)
             {
                 _log.Error(ex, "Failed to update Broadcast info");
             }
-
-        } 
+        }
     }
 }
