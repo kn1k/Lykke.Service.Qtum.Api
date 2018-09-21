@@ -105,7 +105,7 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()
                 .As<IStartable>()
-                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
+                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(1)))
                 .SingleInstance();
 
             builder.RegisterType<AddressHistoryRefreshJob>()
