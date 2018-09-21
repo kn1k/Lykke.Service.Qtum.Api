@@ -17,12 +17,13 @@ using Newtonsoft.Json.Linq;
 
 namespace Lykke.Service.Qtum.Api.Services
 {
-    public class TransactionService<TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput> : ITransactionService<
-        TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput>
+    public class TransactionService<TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput> :
+        ITransactionService<
+            TTransactionBody, TTransactionMeta, TTransactionObservation, TOutput>
         where TTransactionBody : ITransactionBody, new()
         where TTransactionMeta : ITransactionMeta, new()
         where TTransactionObservation : ITransactionObservation, new()
-        where TOutput: IOutput, new()
+        where TOutput : IOutput, new()
     {
         private readonly ILog _log;
         private readonly ITransactionBodyRepository<TTransactionBody> _transactionBodyRepository;
@@ -31,13 +32,14 @@ namespace Lykke.Service.Qtum.Api.Services
         private readonly ISpentOutputRepository<TOutput> _spentOutputRepository;
         private readonly IBlockchainService _blockchainService;
         private readonly IFeeService _feeService;
+        private int _confirmationsCount;
 
         public TransactionService(ILogFactory logFactory,
             ITransactionBodyRepository<TTransactionBody> transactionBodyRepository,
             ITransactionMetaRepository<TTransactionMeta> transactionMetaRepository,
             ITransactionObservationRepository<TTransactionObservation> transactionObservationRepository,
             ISpentOutputRepository<TOutput> spentOutputRepository,
-            IBlockchainService blockchainService, IFeeService feeService)
+            IBlockchainService blockchainService, IFeeService feeService, int confirmationsCount)
         {
             _transactionBodyRepository = transactionBodyRepository;
             _transactionMetaRepository = transactionMetaRepository;
@@ -45,17 +47,20 @@ namespace Lykke.Service.Qtum.Api.Services
             _spentOutputRepository = spentOutputRepository;
             _blockchainService = blockchainService;
             _feeService = feeService;
+            _confirmationsCount = confirmationsCount;
             _log = logFactory.CreateLog(this);
         }
 
         /// </inheritdoc>
-        public async Task<string> GetUnsignSendTransactionAsync(Guid operationId, string fromAddress, string toAddress, string amount, string assetId, bool includeFee)
+        public async Task<string> GetUnsignSendTransactionAsync(Guid operationId, string fromAddress, string toAddress,
+            string amount, string assetId, bool includeFee)
         {
             var transactionBody = await GetTransactionBodyByIdAsync(operationId);
 
             if (transactionBody == null)
             {
-                _log.Info(nameof(GetUnsignSendTransactionAsync), $"Create new unsigned transaction, with id: {operationId}", 
+                _log.Info(nameof(GetUnsignSendTransactionAsync),
+                    $"Create new unsigned transaction, with id: {operationId}",
                     JObject.FromObject(new
                     {
                         operationId,
@@ -81,7 +86,8 @@ namespace Lykke.Service.Qtum.Api.Services
 
                 await SaveTransactionMetaAsync(transactionMeta);
 
-                _log.Info(nameof(GetUnsignSendTransactionAsync), $"Create new txMeta, with id: {operationId}", JObject.FromObject(transactionMeta));
+                _log.Info(nameof(GetUnsignSendTransactionAsync), $"Create new txMeta, with id: {operationId}",
+                    JObject.FromObject(transactionMeta));
 
                 var unsignedTransaction =
                     await CreateUnsignSendTransactionAsync(transactionMeta.FromAddress,
@@ -95,11 +101,13 @@ namespace Lykke.Service.Qtum.Api.Services
 
                 await SaveTransactionBodyAsync(transactionBody);
 
-                _log.Info(nameof(GetUnsignSendTransactionAsync), $"Create new txBody, with id: {operationId}", JObject.FromObject(transactionBody));
+                _log.Info(nameof(GetUnsignSendTransactionAsync), $"Create new txBody, with id: {operationId}",
+                    JObject.FromObject(transactionBody));
             }
             else
             {
-                _log.Info(nameof(GetUnsignSendTransactionAsync), $"Return already existing unsigned transaction, with id: {operationId}", 
+                _log.Info(nameof(GetUnsignSendTransactionAsync),
+                    $"Return already existing unsigned transaction, with id: {operationId}",
                     JObject.FromObject(new
                     {
                         operationId,
@@ -163,48 +171,48 @@ namespace Lykke.Service.Qtum.Api.Services
 
         private async Task<IEnumerable<Coin>> Filter(IList<Coin> coins)
         {
-            var spentOutputs = new HashSet<OutPoint>((await _spentOutputRepository.GetSpentOutputs(coins.Select(o => new Output(o.Outpoint))))
-                                                                                  .Select(o => new OutPoint(uint256.Parse(o.TransactionHash), o.N)));
+            var spentOutputs = new HashSet<OutPoint>(
+                (await _spentOutputRepository.GetSpentOutputs(coins.Select(o => new Output(o.Outpoint))))
+                .Select(o => new OutPoint(uint256.Parse(o.TransactionHash), o.N)));
             return coins.Where(c => !spentOutputs.Contains(c.Outpoint));
         }
 
         /// <inheritdoc/>
-        public async Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee)
+        public async Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount,
+            bool includeFee)
         {
             var builder = new TransactionBuilder();
 
             var coins = (await GetFilteredUnspentOutputsAsync(fromAddress)).ToList();
             var balance = coins.Select(o => o.Amount).Sum(o => o.Satoshi);
 
-            if (balance > amount &&
-                balance - amount < new TxOut(Money.Zero, _blockchainService.ParseAddress(fromAddress)).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee).Satoshi)
-            {
-                amount = balance;
-            }
-
-            return await SendWithChange(builder, coins, _blockchainService.ParseAddress(toAddress), new Money(balance), new Money(amount), _blockchainService.ParseAddress(fromAddress), includeFee);
+            return await SendWithChange(builder, coins, _blockchainService.ParseAddress(toAddress), new Money(balance),
+                new Money(amount), _blockchainService.ParseAddress(fromAddress), includeFee);
         }
 
-        private async Task<string> SendWithChange(TransactionBuilder builder, List<Coin> coins, IDestination destination, Money balance, Money amount, IDestination changeDestination, bool includeFee)
+        private async Task<string> SendWithChange(TransactionBuilder builder, List<Coin> coins,
+            IDestination destination, Money balance, Money amount, IDestination changeDestination, bool includeFee)
         {
             if (amount.Satoshi <= 0)
                 throw new Exception("Amount can't be less or equal to zero");
 
             builder.AddCoins(coins)
-                   .Send(destination, amount)
-                   .SetChange(changeDestination);
+                .Send(destination, amount)
+                .SetChange(changeDestination);
 
 
             var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder);
             var requiredBalance = amount + (includeFee ? Money.Zero : calculatedFee);
 
             if (balance < requiredBalance)
-                throw new Exception($"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.");
+                throw new Exception(
+                    $"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.");
 
             if (includeFee)
             {
                 if (calculatedFee > amount)
-                    throw new Exception($"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
+                    throw new Exception(
+                        $"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
                 //builder.SubtractFees(); // TODO it needs new version on nbitcoin
                 amount = amount - calculatedFee;
                 builder = new TransactionBuilder();
@@ -236,13 +244,15 @@ namespace Lykke.Service.Qtum.Api.Services
         /// <inheritdoc/>
         public async Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId)
         {
-            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vin.ToDictionary(x => x.Addr, x => x.Value.ToString());
+            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vin.ToDictionary(x => x.Addr,
+                x => x.Value.ToString());
         }
 
         /// <inheritdoc/>
         public async Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId)
         {
-            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vout.ToDictionary(x => x.ScriptPubKey.Addresses.FirstOrDefault(), x => x.Value.ToString());
+            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vout.ToDictionary(
+                x => x.ScriptPubKey.Addresses.FirstOrDefault(), x => x.Value.ToString());
         }
 
         /// <summary>
@@ -276,7 +286,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             return await _transactionObservationRepository.GetAsync(pageSize, continuation);
         }
-        
+
         /// <inheritdoc/>
         public async Task<bool> BroadcastSignedTransactionAsync(Guid operationId, string signedTransaction)
         {
@@ -321,12 +331,77 @@ namespace Lykke.Service.Qtum.Api.Services
             };
 
             await CreateObservationAsync(transactionObservation);
-
+            
             _log.Info(nameof(BroadcastSignedTransactionAsync),
                 JObject.FromObject(transactionObservation).ToString(),
                 $"Observe new transaction, with id: {operationId}");
 
             return true;
+        }
+
+        public async Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId)
+        {
+            var txMeta = await GetTransactionMetaAsync(operationId.ToString());
+            var txBody = await GetTransactionBodyByIdAsync(operationId);
+            
+            if (txMeta == null)
+            {
+                throw new ArgumentException($"{nameof(txMeta)} with {operationId} not found");
+            }
+                
+            if (txBody == null)
+            {
+                throw new ArgumentException($"{nameof(txBody)} with {operationId} not found");
+            }
+            
+            try
+            {
+                if (txMeta.State == TransactionState.Signed)
+                {
+                    var broadcactResult =
+                        await _blockchainService.BroadcastSignedTransactionAsync(txBody.SignedTransaction);
+
+                    if (broadcactResult.error != null)
+                    {
+                        txMeta.Error = broadcactResult.error;
+                        txMeta.State = TransactionState.Failed;
+                    }
+                    else
+                    {
+                        txMeta.TxId = broadcactResult.txId;
+                        txMeta.State = TransactionState.Broadcasted;
+                    }
+                }
+                
+                if (txMeta.State == TransactionState.Broadcasted)
+                {
+                    var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                    if (txInfo != null)
+                    {
+                        if (txInfo.Confirmations >= _confirmationsCount)
+                        {
+                            txMeta.State = TransactionState.Confirmed;
+                            txMeta.Hash = txInfo.Blockhash;
+                            txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                            txMeta.BlockCount = txInfo.Blockheight;
+                        }
+                    }
+                    else
+                    {
+                        txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                        txMeta.State = TransactionState.Failed;
+                    }
+                }
+
+                await UpdateTransactionMeta(txMeta);
+                return txMeta;
+            }
+            catch (Exception e)
+            {
+                _log.Error($"failed to update tx info for operation: {operationId}", e);
+                return txMeta;
+            }
         }
 
         /// <inheritdoc/>
@@ -384,14 +459,13 @@ namespace Lykke.Service.Qtum.Api.Services
                                 txMeta.State = TransactionState.Failed;
                             }
                         }
-                        
+
                         await UpdateTransactionMeta(txMeta);
                     }
                     catch (Exception e)
                     {
                         _log.Error($"failed to update tx info for operation: {transactionObservation.OperationId}", e);
                     }
-
                 }
 
                 continuation = transactionObservations.continuation;

@@ -113,10 +113,10 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();
             
-            builder.RegisterType<BroadcastJob>()
-                .As<IStartable>()
-                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(0.5)))
-                .SingleInstance();
+//            builder.RegisterType<BroadcastJob>()
+//                .As<IStartable>()
+//                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
+//                .SingleInstance();
             
             builder.RegisterType<FeeService>()
                 .As<IFeeService>()

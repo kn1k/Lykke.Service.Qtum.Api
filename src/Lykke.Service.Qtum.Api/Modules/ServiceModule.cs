@@ -91,7 +91,8 @@ namespace Lykke.Service.Qtum.Api.Modules
                 .As<IBalanceService<BalanceObservation, AddressBalance>>();
             
             builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>()
-                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>();
+                .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>()
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ConfirmationsCount).CurrentValue));
 
             builder.RegisterType<HistoryService<AddressHistoryEntry, AddressObservation>>()
                 .As<IHistoryService<AddressHistoryEntry, AddressObservation>>();
