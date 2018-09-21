@@ -28,6 +28,10 @@ Network:
     settings-key: "QtumApiService-Network"
     types:
         - Tag
+ConfirmationsCount:
+    settings-key: "QtumApiService-ConfirmationsCount"
+    types:
+        - Tag
 ExternalApi:
     QtumInsightApi:
         settings-key: "QtumApiService-QtumInsightApi"
