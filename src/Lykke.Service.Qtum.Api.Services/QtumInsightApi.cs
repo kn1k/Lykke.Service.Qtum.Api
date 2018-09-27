@@ -122,7 +122,7 @@ namespace Lykke.Service.Qtum.Api.Services
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc/>SubstructFees
         public async Task<ITxInfo> GetTxByIdAsync(ITxId txId)
         {
             var client = new RestClient($"{_url}/tx/{txId.txid}");

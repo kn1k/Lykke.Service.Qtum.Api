@@ -44,45 +44,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         Task<bool> IsTransactionObservedAsync(TTransactionObservation transactionObservation);
 
         /// <summary>
-        /// Get transaction body by operation id
-        /// </summary>
-        /// <param name="operationId">Operation Id</param>
-        /// <returns>Transaction body</returns>
-        Task<TTransactionBody> GetTransactionBodyByIdAsync(Guid operationId);
-
-        /// <summary>
-        /// Save transaction meta
-        /// </summary>
-        /// <param name="transactionMeta">Transaction meta</param>
-        /// <returns>true if created, false if existed before</returns>
-        Task<bool> SaveTransactionMetaAsync(TTransactionMeta transactionMeta);
-
-        /// <summary>
-        /// Save transaction body
-        /// </summary>
-        /// <param name="transactionBody">Transaction body</param>
-        /// <returns>true if created, false if existed before</returns>
-        Task<bool> SaveTransactionBodyAsync(TTransactionBody transactionBody);
-
-        /// <summary>
-        /// Get unspent outputs for the address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="confirmationsCount"></param>
-        /// <returns></returns>
-        Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0);
-
-        /// <summary>
-        /// Build unsined send transaction
-        /// </summary>
-        /// <param name="fromAddress">Address from</param>
-        /// <param name="toAddress">Address to</param>
-        /// <param name="amount">Amount</param>
-        /// <param name="includeFee">Flag indicates that transaction should incude fee</param>
-        /// <returns>Unsined transaction</returns>
-        Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount, bool includeFee);
-        
-        /// <summary>
         /// Publish signed transaction to network
         /// </summary>
         /// <param name="operationId">Operation Id</param>
@@ -105,10 +66,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>A Task object that represents the asynchronous operation</returns>
         Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation);
         
-        Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId);
-        
-        Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId);
-
         Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId);
 
     }

@@ -246,133 +246,6 @@ namespace Lykke.Service.Qtum.Api.Controllers
         }
 
         /// <summary>
-        /// Get broadcasted transaction with with many inputs
-        /// </summary>
-        /// <param name="operationId">Operation Id</param>
-        /// <returns>Broadcasted transaction response</returns>
-        [HttpGet("broadcast/many-inputs/{operationId}")]
-        [SwaggerOperation("GetBroadcastedManyInputsTransaction")]
-        [ProducesResponseType(typeof(BroadcastedTransactionWithManyInputsResponse), (int) HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
-        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
-        [ProducesResponseType(typeof(BlockchainErrorResponse), (int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> GetBroadcastedManyInputsTransaction(string operationId)
-        {
-            if (ModelState.IsValidOperationIdParameter(operationId))
-            {
-                var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
-                if (txMeta != null)
-                {
-                    BroadcastedTransactionState state;
-                    BlockchainErrorCode? blockchainErrorCode = null;
-
-                    switch (txMeta.State)
-                    {
-                        case TransactionState.Confirmed:
-                            state = BroadcastedTransactionState.Completed;
-                            break;
-                        case TransactionState.Failed:
-                        case TransactionState.BlockChainFailed:
-                            state = BroadcastedTransactionState.Failed;
-                            //TODO: support other code
-                            blockchainErrorCode = BlockchainErrorCode.Unknown;
-                            break;
-                        default:
-                            state = BroadcastedTransactionState.InProgress;
-                            break;
-                    }
-
-                    return Ok(new BroadcastedTransactionWithManyInputsResponse
-                    {
-                        OperationId = txMeta.OperationId,
-                        State = state,
-                        Timestamp = (txMeta.CompleteTimestamp ?? txMeta.BroadcastTimestamp).Value,
-                        Fee = txMeta.Fee != null ? _coinConverter.QtumToLykkeQtum(txMeta.Fee) : txMeta.Fee,
-                        Hash = txMeta.TxId,
-                        Error = txMeta.Error,
-                        ErrorCode = blockchainErrorCode,
-                        Block = txMeta.BlockCount,
-                        Inputs = txMeta.TxId != null ? (await _transactionService.GetTransactionInputsAsync(txMeta.TxId)).Select(x => new BroadcastedTransactionInputContract
-                        {
-                            FromAddress = x.Key,
-                            Amount = _coinConverter.QtumToLykkeQtum(x.Value)
-                        }).ToList() : null
-                    });
-                }
-                else
-                    return StatusCode((int) HttpStatusCode.NoContent);
-            }
-            else
-            {
-                return StatusCode((int) HttpStatusCode.BadRequest, ModelState.ToErrorResponse());
-            }
-        }
-
-
-        /// <summary>
-        /// Get broadcasted transaction with with many outputs
-        /// </summary>
-        /// <param name="operationId">Operation Id</param>
-        /// <returns>Broadcasted transaction response</returns>
-        [HttpGet("broadcast/many-outputs/{operationId}")]
-        [SwaggerOperation("GetBroadcastedManyOutputsTransaction")]
-        [ProducesResponseType(typeof(BroadcastedTransactionWithManyOutputsResponse), (int) HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
-        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
-        [ProducesResponseType(typeof(BlockchainErrorResponse), (int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> GetBroadcastedManyOutputsTransaction(string operationId)
-        {
-            if (ModelState.IsValidOperationIdParameter(operationId))
-            {
-                var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
-                if (txMeta != null)
-                {
-                    BroadcastedTransactionState state;
-                    BlockchainErrorCode? blockchainErrorCode = null;
-
-                    switch (txMeta.State)
-                    {
-                        case TransactionState.Confirmed:
-                            state = BroadcastedTransactionState.Completed;
-                            break;
-                        case TransactionState.Failed:
-                        case TransactionState.BlockChainFailed:
-                            state = BroadcastedTransactionState.Failed;
-                            //TODO: support other code
-                            blockchainErrorCode = BlockchainErrorCode.Unknown;
-                            break;
-                        default:
-                            state = BroadcastedTransactionState.InProgress;
-                            break;
-                    }
-
-                    return Ok(new BroadcastedTransactionWithManyOutputsResponse
-                    {
-                        OperationId = txMeta.OperationId,
-                        State = state,
-                        Timestamp = (txMeta.CompleteTimestamp ?? txMeta.BroadcastTimestamp).Value,
-                        Fee = txMeta.Fee != null ? _coinConverter.QtumToLykkeQtum(txMeta.Fee) : txMeta.Fee,
-                        Hash = txMeta.TxId,
-                        Error = txMeta.Error,
-                        ErrorCode = blockchainErrorCode,
-                        Block = txMeta.BlockCount,
-                        Outputs = txMeta.TxId != null ? (await _transactionService.GetTransactionInputsAsync(txMeta.TxId)).Select(x => new BroadcastedTransactionOutputContract
-                        {
-                            ToAddress = x.Key,
-                            Amount = _coinConverter.QtumToLykkeQtum(x.Value)
-                        }).ToList() : null
-                    });
-                }
-                else
-                    return StatusCode((int) HttpStatusCode.NoContent);
-            }
-            else
-            {
-                return StatusCode((int) HttpStatusCode.BadRequest, ModelState.ToErrorResponse());
-            }
-        }
-
-        /// <summary>
         /// Remove specified transaction from the broadcasted transactions
         /// </summary>
         /// <param name="operationId">Operation Id</param>
@@ -407,6 +280,42 @@ namespace Lykke.Service.Qtum.Api.Controllers
 
         #endregion
 
+
+        #region NotImplemented
+
+                /// <summary>
+        /// Get broadcasted transaction with with many inputs
+        /// </summary>
+        /// <param name="operationId">Operation Id</param>
+        /// <returns>Broadcasted transaction response</returns>
+        [HttpGet("broadcast/many-inputs/{operationId}")]
+        [SwaggerOperation("GetBroadcastedManyInputsTransaction")]
+        [ProducesResponseType(typeof(BroadcastedTransactionWithManyInputsResponse), (int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
+        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(BlockchainErrorResponse), (int) HttpStatusCode.BadRequest)]
+        public IActionResult GetBroadcastedManyInputsTransaction(string operationId)
+        {
+            return StatusCode((int) HttpStatusCode.NotImplemented);
+        }
+
+
+        /// <summary>
+        /// Get broadcasted transaction with with many outputs
+        /// </summary>
+        /// <param name="operationId">Operation Id</param>
+        /// <returns>Broadcasted transaction response</returns>
+        [HttpGet("broadcast/many-outputs/{operationId}")]
+        [SwaggerOperation("GetBroadcastedManyOutputsTransaction")]
+        [ProducesResponseType(typeof(BroadcastedTransactionWithManyOutputsResponse), (int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NotImplemented)]
+        [ProducesResponseType(typeof(ErrorResponse), (int) HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(BlockchainErrorResponse), (int) HttpStatusCode.BadRequest)]
+        public IActionResult GetBroadcastedManyOutputsTransaction(string operationId)
+        {
+            return StatusCode((int) HttpStatusCode.NotImplemented);
+        }
+        
         /// <summary>
         ///  Rebuild not signed transaction with the specified fee factor
         /// </summary>
@@ -422,9 +331,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
         {
             return StatusCode((int) HttpStatusCode.NotImplemented);
         }
-
-        #region NotImplemented
-
+        
         /// <summary>
         /// Build not signed receive transaction to transfer from the single source to the single destination
         /// </summary>

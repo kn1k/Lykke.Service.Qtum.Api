@@ -32,7 +32,7 @@ namespace Lykke.Service.Qtum.Api.Services
         private readonly ISpentOutputRepository<TOutput> _spentOutputRepository;
         private readonly IBlockchainService _blockchainService;
         private readonly IFeeService _feeService;
-        private int _confirmationsCount;
+        private readonly int _confirmationsCount;
 
         public TransactionService(ILogFactory logFactory,
             ITransactionBodyRepository<TTransactionBody> transactionBodyRepository,
@@ -90,8 +90,9 @@ namespace Lykke.Service.Qtum.Api.Services
                     JObject.FromObject(transactionMeta));
 
                 var unsignedTransaction =
-                    await CreateUnsignSendTransactionAsync(transactionMeta.FromAddress,
-                        transactionMeta.ToAddress, long.Parse(transactionMeta.Amount), transactionMeta.IncludeFee);
+                    await CreateUnsignSendTransactionAsync(transactionMeta);
+                
+                await SaveTransactionMetaAsync(transactionMeta);
 
                 transactionBody = new TTransactionBody
                 {
@@ -122,7 +123,6 @@ namespace Lykke.Service.Qtum.Api.Services
             return transactionBody.UnsignedTransaction;
         }
 
-        /// </inheritdoc>
         public async Task<bool> IsTransactionAlreadyBroadcastAsync(Guid operationId)
         {
             var txMeta = await GetTransactionMetaAsync(operationId.ToString());
@@ -140,31 +140,28 @@ namespace Lykke.Service.Qtum.Api.Services
             return false;
         }
 
-        /// </inheritdoc>
         public async Task<TTransactionMeta> GetTransactionMetaAsync(string id)
         {
             return await _transactionMetaRepository.GetAsync(id);
         }
 
-        /// </inheritdoc>
-        public async Task<TTransactionBody> GetTransactionBodyByIdAsync(Guid operationId)
+        private async Task<TTransactionBody> GetTransactionBodyByIdAsync(Guid operationId)
         {
             return await _transactionBodyRepository.GetAsync(operationId.ToString());
         }
 
-        /// </inheritdoc>
-        public async Task<bool> SaveTransactionMetaAsync(TTransactionMeta transactionMeta)
+        private async Task<bool> SaveTransactionMetaAsync(TTransactionMeta transactionMeta)
         {
             return await _transactionMetaRepository.CreateIfNotExistsAsync(transactionMeta);
         }
 
         /// </inheritdoc>
-        public async Task<bool> SaveTransactionBodyAsync(TTransactionBody transactionBody)
+        private async Task<bool> SaveTransactionBodyAsync(TTransactionBody transactionBody)
         {
             return await _transactionBodyRepository.CreateIfNotExistsAsync(transactionBody);
         }
 
-        public async Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0)
+        private async Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0)
         {
             return await Filter(await _blockchainService.GetUnspentOutputsAsync(address, confirmationsCount));
         }
@@ -178,21 +175,23 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task<string> CreateUnsignSendTransactionAsync(string fromAddress, string toAddress, long amount,
-            bool includeFee)
+        private async Task<string> CreateUnsignSendTransactionAsync(TTransactionMeta transactionMeta)
         {
             var builder = new TransactionBuilder();
 
-            var coins = (await GetFilteredUnspentOutputsAsync(fromAddress)).ToList();
+            var coins = (await GetFilteredUnspentOutputsAsync(transactionMeta.FromAddress)).ToList();
             var balance = coins.Select(o => o.Amount).Sum(o => o.Satoshi);
 
-            return await SendWithChange(builder, coins, _blockchainService.ParseAddress(toAddress), new Money(balance),
-                new Money(amount), _blockchainService.ParseAddress(fromAddress), includeFee);
+            return await SendWithChange(builder, coins,new Money(balance), transactionMeta);
         }
 
-        private async Task<string> SendWithChange(TransactionBuilder builder, List<Coin> coins,
-            IDestination destination, Money balance, Money amount, IDestination changeDestination, bool includeFee)
+        private async Task<string> SendWithChange(TransactionBuilder builder, List<Coin> coins, Money balance, TTransactionMeta transactionMeta)
         {
+            var amount =  new Money(long.Parse(transactionMeta.Amount));
+            var destination = _blockchainService.ParseAddress(transactionMeta.ToAddress);
+            var changeDestination = _blockchainService.ParseAddress(transactionMeta.FromAddress);
+            var includeFee = transactionMeta.IncludeFee;
+            
             if (amount.Satoshi <= 0)
                 throw new Exception("Amount can't be less or equal to zero");
 
@@ -213,14 +212,11 @@ namespace Lykke.Service.Qtum.Api.Services
                 if (calculatedFee > amount)
                     throw new Exception(
                         $"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
-                //builder.SubtractFees(); // TODO it needs new version on nbitcoin
-                amount = amount - calculatedFee;
-                builder = new TransactionBuilder();
-                builder.AddCoins(coins)
-                    .Send(destination, amount)
-                    .SetChange(changeDestination);
+                builder.SubtractFees();
             }
 
+            transactionMeta.Fee = calculatedFee.Satoshi.ToString();
+            
             builder.SendFees(calculatedFee);
 
             var tx = builder.BuildTransaction(false);
@@ -239,20 +235,6 @@ namespace Lykke.Service.Qtum.Api.Services
         public async Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation)
         {
             return await _transactionObservationRepository.DeleteIfExistAsync(transactionObservation);
-        }
-
-        /// <inheritdoc/>
-        public async Task<Dictionary<string, string>> GetTransactionInputsAsync(string txId)
-        {
-            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vin.ToDictionary(x => x.Addr,
-                x => x.Value.ToString());
-        }
-
-        /// <inheritdoc/>
-        public async Task<Dictionary<string, string>> GetTransactionOutputsAsync(string txId)
-        {
-            return (await _blockchainService.GetTransactionInfoByIdAsync(txId)).Vout.ToDictionary(
-                x => x.ScriptPubKey.Addresses.FirstOrDefault(), x => x.Value.ToString());
         }
 
         /// <summary>
@@ -281,7 +263,7 @@ namespace Lykke.Service.Qtum.Api.Services
         /// <param name="pageSize">Abount of transaction observation</param>
         /// <param name="continuation">ontinuation data</param>
         /// <returns>ontinuation data and transaction observation</returns>
-        public async Task<(string continuation, IEnumerable<TTransactionObservation> items)>
+        private async Task<(string continuation, IEnumerable<TTransactionObservation> items)>
             GetTransactionObservationAsync(int pageSize, string continuation)
         {
             return await _transactionObservationRepository.GetAsync(pageSize, continuation);

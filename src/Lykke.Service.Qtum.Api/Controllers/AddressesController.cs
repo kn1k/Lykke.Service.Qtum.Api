@@ -48,7 +48,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
         {
             if (_blockchainService.IsAddressValid(address))
             {
-                if (_blockchainService.GetNetwork() == QtumNetworks.Testnet)
+                if (_blockchainService.GetNetwork() == QtumNetworks.Instance.Testnet)
                 {
                     return StatusCode((int) HttpStatusCode.OK,
                         new List<string> {$"https://testnet.qtum.org/address/{address}"});
