@@ -35,7 +35,7 @@ namespace Lykke.Service.Qtum.Api.Modules
             // Do not register entire settings in container, pass necessary settings to services which requires them
 
             // Network setup
-            QtumNetworks.Register();
+            QtumNetworks.Instance.EnsureRegistered();
             builder.RegisterInstance(Network.GetNetwork(_appSettings.Nested(s => s.Network).CurrentValue))
                 .As<Network>();
 

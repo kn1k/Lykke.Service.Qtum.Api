@@ -38,7 +38,7 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             // Do not register entire settings in container, pass necessary settings to services which requires them
             
             // Network setup
-            QtumNetworks.Register();
+            QtumNetworks.Instance.EnsureRegistered();
             builder.RegisterInstance(Network.GetNetwork(_appSettings.Nested(s => s.Network).CurrentValue)).As<Network>();
             
             // CoinConverter            
@@ -112,11 +112,6 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                 .As<IStartable>()
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();
-            
-//            builder.RegisterType<BroadcastJob>()
-//                .As<IStartable>()
-//                .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
-//                .SingleInstance();
             
             builder.RegisterType<FeeService>()
                 .As<IFeeService>()
