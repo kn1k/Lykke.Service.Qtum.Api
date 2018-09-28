@@ -92,7 +92,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 var unsignedTransaction =
                     await CreateUnsignSendTransactionAsync(transactionMeta);
                 
-                await SaveTransactionMetaAsync(transactionMeta);
+                await UpdateTransactionMeta(transactionMeta);
 
                 transactionBody = new TTransactionBody
                 {
