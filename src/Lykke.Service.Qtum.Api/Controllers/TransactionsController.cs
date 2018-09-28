@@ -11,6 +11,7 @@ using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Transactions;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
+using Lykke.Service.Qtum.Api.Core.Exceptions;
 using Lykke.Service.Qtum.Api.Core.Helpers;
 using Lykke.Service.Qtum.Api.Core.Services;
 using Lykke.Service.Qtum.Api.Helpers;
@@ -74,14 +75,14 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 try
                 {
                     var unsignTransaction = await _transactionService.GetUnsignSendTransactionAsync(
-                        buildTransactionRequest.OperationId, 
+                        buildTransactionRequest.OperationId,
                         buildTransactionRequest.FromAddress,
                         buildTransactionRequest.ToAddress,
                         _coinConverter.LykkeQtumToQtum(buildTransactionRequest.Amount),
                         buildTransactionRequest.AssetId,
                         buildTransactionRequest.IncludeFee);
 
-                    return StatusCode((int)HttpStatusCode.OK, new BuildTransactionResponse
+                    return StatusCode((int) HttpStatusCode.OK, new BuildTransactionResponse
                     {
                         TransactionContext = unsignTransaction
                     });
@@ -89,8 +90,14 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 catch (NBitcoin.NotEnoughFundsException e)
                 {
                     _log.Error(e);
-                    return StatusCode((int)HttpStatusCode.BadRequest,
+                    return StatusCode((int) HttpStatusCode.BadRequest,
                         BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+                }
+                catch (AmountIsTooSmallException e)
+                {
+                    _log.Error(e);
+                    return StatusCode((int) HttpStatusCode.BadRequest,
+                        BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.AmountIsTooSmall));
                 }
                 
             }
