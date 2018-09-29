@@ -8,6 +8,7 @@ using Lykke.Service.Qtum.Api.AzureRepositories.Entities.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Helpers;
 using Lykke.Service.Qtum.Api.Core.Domain.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Domain.Transactions;
+using Lykke.Service.Qtum.Api.Core.Exceptions;
 using Lykke.Service.Qtum.Api.Core.Repositories.TransactionOutputs;
 using Lykke.Service.Qtum.Api.Core.Repositories.Transactions;
 using Lykke.Service.Qtum.Api.Core.Services;
@@ -210,7 +211,7 @@ namespace Lykke.Service.Qtum.Api.Services
             if (includeFee)
             {
                 if (calculatedFee > amount)
-                    throw new Exception(
+                    throw new AmountIsTooSmallException(
                         $"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.");
                 builder.SubtractFees();
             }
