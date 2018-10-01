@@ -72,9 +72,8 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// Get a list of unspent outputs
         /// </summary>
         /// <param name="address">Address for getting outputs</param>
-        /// <param name="minConfirmationCount"></param>
         /// <returns></returns>
-        Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount);
+        Task<IList<Coin>> GetUnspentOutputsAsync(string address);
         
         /// <summary>
         /// Broadcast transaction to network

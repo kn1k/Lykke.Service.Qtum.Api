@@ -14,7 +14,7 @@ namespace Lykke.Service.Qtum.Api.Core.Helpers
 
         public static double DateTimeToUnixTimeStamp(DateTime dateTime)
         {
-            return (dateTime - _dtDateTime).TotalSeconds;;
+            return (dateTime - _dtDateTime).TotalSeconds;
         }
     }
 }

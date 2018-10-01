@@ -20,6 +20,7 @@ namespace Lykke.Service.Qtum.Api.Services
     {
         private readonly Network _network;
         private readonly IInsightApiService _insightApiService;
+        private readonly int _confirmationsCount;
 
         private const int RetryCount = 4;
 
@@ -27,10 +28,11 @@ namespace Lykke.Service.Qtum.Api.Services
 
         private readonly Policy _policy;
 
-        public BlockchainService(Network network, IInsightApiService insightApiService, IFeeService feeService)
+        public BlockchainService(Network network, IInsightApiService insightApiService, IFeeService feeService, int confirmationsCount)
         {
             _network = network;
             _insightApiService = insightApiService;
+            _confirmationsCount = confirmationsCount;
 
             _policy = Policy
                 .Handle<HttpRequestException>()
@@ -82,10 +84,12 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.GetUtxoAsync(address);
-                if (result.Any())
+                var utxos = await _insightApiService.GetUtxoAsync(address);
+                if (utxos.Any())
                 {
-                    return result.Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
+                    return utxos
+                        .Where(p => p.Confirmations >= _confirmationsCount)
+                        .Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
                 }
                 else
                 {
@@ -182,7 +186,7 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task<IList<Coin>> GetUnspentOutputsAsync(string address, int minConfirmationCount)
+        public async Task<IList<Coin>> GetUnspentOutputsAsync(string address)
         {
             var utxos = await _policy.ExecuteAsync(async () =>
             {
@@ -190,7 +194,7 @@ namespace Lykke.Service.Qtum.Api.Services
             });
 
             return utxos
-                    .Where(p => p.Confirmations >= minConfirmationCount)
+                    .Where(p => p.Confirmations >= _confirmationsCount)
                     .Select(source =>
                     {
                         return new Coin(
