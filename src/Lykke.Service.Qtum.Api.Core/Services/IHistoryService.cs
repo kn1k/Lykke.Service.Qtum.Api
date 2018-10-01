@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Lykke.Service.Qtum.Api.Core.Domain.Addresses;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lykke.Service.Qtum.Api.Core.Services
@@ -79,8 +80,9 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <summary>
         /// Update observed addresses history
         /// </summary>
+        ///  <param name="type">Address observation type</param>
         /// <param name="pageSize">Update page size</param>
         /// <returns></returns>
-        Task UpdateObservedAddressHistoryAsync(int pageSize = 10);
+        Task UpdateObservedAddressHistoryAsync(AddressObservationType type, int pageSize = 10);
     }
 }

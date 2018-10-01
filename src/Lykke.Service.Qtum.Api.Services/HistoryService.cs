@@ -101,14 +101,14 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         ///</inheritdoc>
-        public async Task UpdateObservedAddressHistoryAsync(int pageSize = 10)
+        public async Task UpdateObservedAddressHistoryAsync(AddressObservationType type, int pageSize = 10)
         {
             (string continuation, IEnumerable<TAddressObservation> items) addressObservation;
             string continuation = null;
 
             do
             {
-                addressObservation = await GetAddressObservationAsync(pageSize, continuation);
+                addressObservation = await GetAddressObservationAsync(pageSize, continuation, Enum.GetName(typeof(AddressObservationType), type));
 
                 if (addressObservation.items.Any())
                 {
@@ -120,15 +120,18 @@ namespace Lykke.Service.Qtum.Api.Services
                         {
                             var transactionInfoItems = await _blockchainService.GetAddressTransactionsInfoAsync(_blockchainService.ParseAddress(observedAddress.Address));
 
-                            foreach (var transactionInfo in transactionInfoItems)
+                            if (transactionInfoItems != null)
                             {
-                                var addressHistoryEntry = GetAddressHistoryEntry(transactionInfo, observedAddress);
-
-                                if (addressHistoryEntry == null) continue;
-
-                                if (!await InsertAddressHistoryAsync((TAddressHistory)addressHistoryEntry))
+                                foreach (var transactionInfo in transactionInfoItems)
                                 {
-                                    _log.Warning("Unable to insert address history entry into the store");
+                                    var addressHistoryEntry = GetAddressHistoryEntry(transactionInfo, observedAddress);
+
+                                    if (addressHistoryEntry == null) continue;
+
+                                    if (!await InsertAddressHistoryAsync((TAddressHistory)addressHistoryEntry))
+                                    {
+                                        _log.Warning("Unable to insert address history entry into the store");
+                                    }
                                 }
                             }
                         }
@@ -148,28 +151,30 @@ namespace Lykke.Service.Qtum.Api.Services
             // but do it like in bitcoin* APIs
 
             var requestedAddress = addrObservation.Address;
+            var nfi = new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." };
 
             var isSending = tx.Vin.Where(p => p.Addr == requestedAddress).Sum(p => p.Value) >=
-                            tx.Vout.Where(p => p.ScriptPubKey.Addresses[0] == requestedAddress).Sum(p => long.Parse(p.Value));
+                            tx.Vout.Where(p => p.ScriptPubKey.Addresses[0] == requestedAddress).Sum(p => double.Parse(p.Value, nfi));
 
             if (isSending == (addrObservation.Type == AddressObservationType.From))
             {
 
                 string from;
                 string to;
-                long amount;
+                double amount;
+
 
                 if (isSending)
                 {
                     from = requestedAddress;
                     to = tx.Vout.Select(o => o.ScriptPubKey.Addresses[0]).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
-                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] != requestedAddress).Sum(o => long.Parse(o.Value));
+                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] != requestedAddress).Sum(o => double.Parse(o.Value, nfi));
                 }
                 else
                 {
                     to = requestedAddress;
                     from = tx.Vin.Select(o => o.Addr).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
-                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] == requestedAddress).Sum(o => long.Parse(o.Value));
+                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] == requestedAddress).Sum(o => double.Parse(o.Value, nfi));
                 }
 
                 return new AddressHistoryEntry

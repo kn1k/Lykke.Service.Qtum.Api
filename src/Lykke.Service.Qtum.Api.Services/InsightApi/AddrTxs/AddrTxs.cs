@@ -2,6 +2,7 @@
 using Lykke.Service.Qtum.Api.Core.Domain.InsightApi.AddrTxs;
 using Lykke.Service.Qtum.Api.Services.InsightApi.Converters;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs
 {
@@ -11,7 +12,7 @@ namespace Lykke.Service.Qtum.Api.Services.InsightApi.AddrTxs
         public int From { get; set; }
         public int To { get; set; }
         
-        [JsonConverter(typeof(ConcreteConverter<TxInfo>))]   
+        [JsonConverter(typeof(ConcreteConverter<TxInfo[]>))]   
         public ITxInfo[] Items { get; set; }
     }
 }
