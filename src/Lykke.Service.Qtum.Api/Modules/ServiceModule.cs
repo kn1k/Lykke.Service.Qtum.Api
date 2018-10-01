@@ -85,7 +85,8 @@ namespace Lykke.Service.Qtum.Api.Modules
 
             builder.RegisterType<BlockchainService>()
                 .As<IBlockchainService>()
-                .WithParameter("networkType", _appSettings.Nested(s => s.Network).CurrentValue);
+                .WithParameter("networkType", _appSettings.Nested(s => s.Network).CurrentValue)
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ConfirmationsCount).CurrentValue));
 
             builder.RegisterType<BalanceService<BalanceObservation, AddressBalance>>()
                 .As<IBalanceService<BalanceObservation, AddressBalance>>();

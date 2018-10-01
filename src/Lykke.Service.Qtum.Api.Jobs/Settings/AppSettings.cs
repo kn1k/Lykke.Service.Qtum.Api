@@ -14,7 +14,9 @@ namespace Lykke.Service.Qtum.Api.Jobs.Settings
         
         [JsonConverter(typeof(StringEnumConverter))]
         public string Network{ get; set; }
-        
+
+        public int ConfirmationsCount { get; set; }
+
         public ExternalApi ExternalApi { get; set; }
         
     }

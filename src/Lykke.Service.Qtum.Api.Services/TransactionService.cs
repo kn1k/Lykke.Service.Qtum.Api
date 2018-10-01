@@ -162,9 +162,9 @@ namespace Lykke.Service.Qtum.Api.Services
             return await _transactionBodyRepository.CreateIfNotExistsAsync(transactionBody);
         }
 
-        private async Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address, int confirmationsCount = 0)
+        private async Task<IEnumerable<Coin>> GetFilteredUnspentOutputsAsync(string address)
         {
-            return await Filter(await _blockchainService.GetUnspentOutputsAsync(address, confirmationsCount));
+            return await Filter(await _blockchainService.GetUnspentOutputsAsync(address));
         }
 
         private async Task<IEnumerable<Coin>> Filter(IList<Coin> coins)
