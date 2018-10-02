@@ -2,6 +2,7 @@
 using Common.Log;
 using Lykke.Common.Log;
 using Lykke.Service.Qtum.Api.AzureRepositories.Entities.Addresses;
+using Lykke.Service.Qtum.Api.Core.Domain.Addresses;
 using Lykke.Service.Qtum.Api.Core.Services;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,8 @@ namespace Lykke.Service.Qtum.Api.Jobs.PeriodicalHandlers
             try
             {
                 _log.Info("Updating address history started");
-                await _historyService.UpdateObservedAddressHistoryAsync();
+                await _historyService.UpdateObservedAddressHistoryAsync(AddressObservationType.From);
+                await _historyService.UpdateObservedAddressHistoryAsync(AddressObservationType.To);
                 _log.Info("Updating address history finished");
             }
             catch (Exception ex)

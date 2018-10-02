@@ -30,7 +30,7 @@ namespace Lykke.Service.Qtum.Api.Services.InsightApi
         public long ValueSat { get; set; }
 
         [JsonProperty("value")]
-        public double Value { get; set; }
+        public decimal Value { get; set; }
 
         [JsonProperty("doubleSpentTxID")]
         public object DoubleSpentTxId { get; set; }

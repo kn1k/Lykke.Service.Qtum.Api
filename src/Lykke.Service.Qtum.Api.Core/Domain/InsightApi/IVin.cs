@@ -16,7 +16,7 @@
 
         long ValueSat { get; set; }
 
-        double Value { get; set; }
+        decimal Value { get; set; }
 
         object DoubleSpentTxId { get; set; }
     }
