@@ -154,34 +154,34 @@ namespace Lykke.Service.Qtum.Api.Services
             var nfi = new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." };
 
             var isSending = tx.Vin.Where(p => p.Addr == requestedAddress).Sum(p => p.Value) >=
-                            tx.Vout.Where(p => p.ScriptPubKey.Addresses[0] == requestedAddress).Sum(p => double.Parse(p.Value, nfi));
+                            tx.Vout.Where(p => p.ScriptPubKey.Addresses[0] == requestedAddress).Sum(p => decimal.Parse(p.Value, nfi));
 
             if (isSending == (addrObservation.Type == AddressObservationType.From))
             {
 
                 string from;
                 string to;
-                double amount;
+                decimal amount;
 
 
                 if (isSending)
                 {
                     from = requestedAddress;
                     to = tx.Vout.Select(o => o.ScriptPubKey.Addresses[0]).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
-                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] != requestedAddress).Sum(o => double.Parse(o.Value, nfi));
+                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] != requestedAddress).Sum(o => decimal.Parse(o.Value, nfi));
                 }
                 else
                 {
                     to = requestedAddress;
                     from = tx.Vin.Select(o => o.Addr).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
-                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] == requestedAddress).Sum(o => double.Parse(o.Value, nfi));
+                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] == requestedAddress).Sum(o => decimal.Parse(o.Value, nfi));
                 }
 
                 return new AddressHistoryEntry
                 {
                     FromAddress = from,
                     ToAddress = to,
-                    Amount = (amount * Math.Pow(10, _assetService.GetQtumAsset().Accuracy)).ToString(),
+                    Amount = (amount * (decimal)Math.Pow(10, _assetService.GetQtumAsset().Accuracy)).ToString("0"),
                     AssetId = _assetService.GetQtumAsset().Id,
                     Type = addrObservation.Type,
                     TransactionType = isSending ? TransactionType.send : TransactionType.receive,
