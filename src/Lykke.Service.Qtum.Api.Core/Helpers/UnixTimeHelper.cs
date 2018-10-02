@@ -8,8 +8,7 @@ namespace Lykke.Service.Qtum.Api.Core.Helpers
 
         public static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
         {
-            _dtDateTime = _dtDateTime.AddSeconds(unixTimeStamp);
-            return _dtDateTime;
+            return _dtDateTime.AddSeconds(unixTimeStamp);
         }
 
         public static double DateTimeToUnixTimeStamp(DateTime dateTime)
