@@ -128,9 +128,9 @@ namespace Lykke.Service.Qtum.Api.Services
 
                                     if (addressHistoryEntry == null) continue;
 
-                                    if (!await InsertAddressHistoryAsync((TAddressHistory)addressHistoryEntry))
+                                    if (await InsertAddressHistoryAsync((TAddressHistory)addressHistoryEntry))
                                     {
-                                        _log.Warning("Unable to insert address history entry into the store");
+                                        _log.Debug($"Address history entry {Enum.GetName(typeof(AddressObservationType), observedAddress.Type)} {observedAddress.Address} is inserted into the store");
                                     }
                                 }
                             }
@@ -154,7 +154,7 @@ namespace Lykke.Service.Qtum.Api.Services
             var nfi = new System.Globalization.NumberFormatInfo { NumberDecimalSeparator = "." };
 
             var isSending = tx.Vin.Where(p => p.Addr == requestedAddress).Sum(p => p.Value) >=
-                            tx.Vout.Where(p => p.ScriptPubKey.Addresses[0] == requestedAddress).Sum(p => decimal.Parse(p.Value, nfi));
+                            tx.Vout.Where(p => p.ScriptPubKey?.Addresses?[0] == requestedAddress).Sum(p => decimal.Parse(p.Value, nfi));
 
             if (isSending == (addrObservation.Type == AddressObservationType.From))
             {
@@ -167,14 +167,14 @@ namespace Lykke.Service.Qtum.Api.Services
                 if (isSending)
                 {
                     from = requestedAddress;
-                    to = tx.Vout.Select(o => o.ScriptPubKey.Addresses[0]).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
-                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] != requestedAddress).Sum(o => decimal.Parse(o.Value, nfi));
+                    to = tx.Vout.Select(o => o.ScriptPubKey?.Addresses?[0]).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
+                    amount = tx.Vout.Where(o => o.ScriptPubKey?.Addresses?[0] != requestedAddress).Sum(o => decimal.Parse(o.Value, nfi));
                 }
                 else
                 {
                     to = requestedAddress;
                     from = tx.Vin.Select(o => o.Addr).FirstOrDefault(o => o != null && o != requestedAddress) ?? requestedAddress;
-                    amount = tx.Vout.Where(o => o.ScriptPubKey.Addresses[0] == requestedAddress).Sum(o => decimal.Parse(o.Value, nfi));
+                    amount = tx.Vout.Where(o => o.ScriptPubKey?.Addresses?[0] == requestedAddress).Sum(o => decimal.Parse(o.Value, nfi));
                 }
 
                 return new AddressHistoryEntry
