@@ -362,7 +362,8 @@ namespace Lykke.Service.Qtum.Api.Services
 
                     if (txInfo != null)
                     {
-                        if (txInfo.Confirmations >= _confirmationsCount)
+                        var confirmationsCount = _confirmationsCount <= 0 ? 1 : _confirmationsCount; // While transaction is unconfirmed, txInfo.Blockheight is incorrect (-1)
+                        if (txInfo.Confirmations >= confirmationsCount)
                         {
                             txMeta.State = TransactionState.Confirmed;
                             txMeta.Hash = txInfo.Blockhash;

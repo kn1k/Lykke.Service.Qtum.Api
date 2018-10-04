@@ -131,7 +131,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
             return StatusCode((int)HttpStatusCode.OK, history.items?.OrderByDescending(x => x.BlockCount).Select(x => new HistoricalTransactionContract
             {
                 Amount = x.Amount,
-                AssetId = x.AssetId,
+                AssetId = _assetService.GetQtumAsset().Id,
                 FromAddress = x.FromAddress,
                 ToAddress = x.ToAddress,
                 Hash = x.Hash,
@@ -166,7 +166,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 x => new HistoricalTransactionContract
                 {
                     Amount = x.Amount,
-                    AssetId = x.AssetId,
+                    AssetId = _assetService.GetQtumAsset().Id,
                     FromAddress = x.FromAddress,
                     ToAddress = x.ToAddress,
                     Hash = x.Hash,

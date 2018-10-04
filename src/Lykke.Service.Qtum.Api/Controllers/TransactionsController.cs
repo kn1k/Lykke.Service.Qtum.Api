@@ -66,7 +66,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
 
                 var balance = await _blockchainService.GetAddressBalanceAsync(_blockchainService.ParseAddress(buildTransactionRequest.FromAddress));
 
-                if (balance < BigInteger.Parse(_coinConverter.LykkeQtumToQtum(buildTransactionRequest.Amount)))
+                if (balance < BigInteger.Parse(buildTransactionRequest.Amount))
                 {
                     return StatusCode((int)HttpStatusCode.BadRequest,
                         BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
@@ -78,7 +78,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         buildTransactionRequest.OperationId,
                         buildTransactionRequest.FromAddress,
                         buildTransactionRequest.ToAddress,
-                        _coinConverter.LykkeQtumToQtum(buildTransactionRequest.Amount),
+                        buildTransactionRequest.Amount,
                         buildTransactionRequest.AssetId,
                         buildTransactionRequest.IncludeFee);
 
@@ -235,8 +235,8 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         OperationId = txMeta.OperationId,
                         State = state,
                         Timestamp = (txMeta.CompleteTimestamp ?? txMeta.BroadcastTimestamp).Value,
-                        Amount = txMeta.Amount != null ? _coinConverter.QtumToLykkeQtum(txMeta.Amount) : txMeta.Amount,
-                        Fee = txMeta.Fee != null ? _coinConverter.QtumToLykkeQtum(txMeta.Fee) : txMeta.Fee,
+                        Amount = txMeta.Amount,
+                        Fee = txMeta.Fee,
                         Hash = txMeta.TxId,
                         Error = txMeta.Error,
                         ErrorCode = blockchainErrorCode,

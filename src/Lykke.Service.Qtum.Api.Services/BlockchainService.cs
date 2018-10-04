@@ -89,7 +89,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 {
                     return utxos
                         .Where(p => p.Confirmations >= _confirmationsCount)
-                        .Select(x => BigInteger.Parse(x.Satoshis)).Aggregate((currentSum, item)=> currentSum + item);
+                        .Select(x => BigInteger.Parse(x.Satoshis)).Aggregate(BigInteger.Zero, (currentSum, item)=> currentSum + item);
                 }
                 else
                 {

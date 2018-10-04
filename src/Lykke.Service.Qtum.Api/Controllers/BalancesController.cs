@@ -125,7 +125,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                     balances.items.Select(b => new WalletBalanceContract
                     {
                         Address = b.Address,
-                        Balance = _coinConverter.QtumToLykkeQtum(b.Balance),
+                        Balance = b.Balance,
                         AssetId = _assetService.GetQtumAsset().Id,
                         Block = b.Block
                     }).ToArray()));
