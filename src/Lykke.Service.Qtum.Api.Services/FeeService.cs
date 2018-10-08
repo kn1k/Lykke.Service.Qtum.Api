@@ -40,6 +40,11 @@ namespace Lykke.Service.Qtum.Api.Services
             return new FeeRate(new Money(_feePerByte * 1024, MoneyUnit.Satoshi));
         }
 
+        public long GetMaxFee()
+        {
+            return _maxFeeValueSatoshi;
+        }
+
         private Money CheckMinMaxThreshold(Money fromFeeRate)
         {
             var min = new Money(_minFeeValueSatoshi, MoneyUnit.Satoshi);

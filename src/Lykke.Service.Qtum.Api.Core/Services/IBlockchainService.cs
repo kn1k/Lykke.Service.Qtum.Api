@@ -73,7 +73,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// </summary>
         /// <param name="address">Address for getting outputs</param>
         /// <returns></returns>
-        Task<IList<Coin>> GetUnspentOutputsAsync(string address);
+        Task<IList<(long, Coin)>> GetUnspentOutputsAsync(string address);
         
         /// <summary>
         /// Broadcast transaction to network

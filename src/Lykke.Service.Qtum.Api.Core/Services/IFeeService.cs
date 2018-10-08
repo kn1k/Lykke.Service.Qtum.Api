@@ -7,5 +7,6 @@ namespace Lykke.Service.Qtum.Api.Core.Services
     {
         Task<Money> CalcFeeForTransactionAsync(Transaction tx);
         Task<Money> CalcFeeForTransactionAsync(TransactionBuilder builder);
+        long GetMaxFee();
     }
 }
