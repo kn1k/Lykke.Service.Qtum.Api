@@ -156,7 +156,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
         public async Task<IActionResult> BroadcastSignedTransactionAsync(
             [FromBody] BroadcastTransactionRequest broadcastTransactionRequest)
         {
-            if (!ModelState.IsValid(broadcastTransactionRequest))
+            if (!ModelState.IsValid(broadcastTransactionRequest, _blockchainService.GetNetwork()))
             {
                 return BadRequest(ModelState.ToErrorResponse("Transaction invalid"));
             }

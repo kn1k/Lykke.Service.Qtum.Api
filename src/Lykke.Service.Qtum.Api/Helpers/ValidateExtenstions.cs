@@ -120,7 +120,7 @@ namespace Lykke.Service.Qtum.Api.Helpers
         /// <param name="self">Validation information <see cref="ModelStateDictionary"/></param>
         /// <param name="broadcastTransactionRequest"><see cref="BroadcastTransactionRequest"/></param>
         /// <returns>Is broadcasted signed transaction valid</returns>
-        public static bool IsValid(this ModelStateDictionary self, BroadcastTransactionRequest broadcastTransactionRequest)
+        public static bool IsValid(this ModelStateDictionary self, BroadcastTransactionRequest broadcastTransactionRequest, Network network)
         {
             try
             {
@@ -131,7 +131,19 @@ namespace Lykke.Service.Qtum.Api.Helpers
                     return false;
                 }
 
-                var transaction = new Transaction(broadcastTransactionRequest.SignedTransaction);
+                try
+                {
+                    if (Transaction.Parse(broadcastTransactionRequest.SignedTransaction, network).Equals(null))
+                    {
+                        self.AddModelError(nameof(broadcastTransactionRequest.SignedTransaction), "Unable to parse passed hex string");
+                        return false;
+                    }
+                }
+                catch(Exception ex)
+                {
+                    self.AddModelError(nameof(broadcastTransactionRequest.SignedTransaction), ex.Message);
+                    return false;
+                }
 
                 if (broadcastTransactionRequest.OperationId.Equals(Guid.Empty))
                 {
