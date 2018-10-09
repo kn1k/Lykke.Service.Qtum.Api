@@ -313,6 +313,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 OperationId = operationId
             };
 
+            // TODO it's useless without job
             await CreateObservationAsync(transactionObservation);
             
             _log.Info(nameof(BroadcastSignedTransactionAsync),
@@ -322,7 +323,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return true;
         }
 
-        public async Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId)
+        public async Task<TTransactionMeta> UpdateTransactionBroadcastStatusAsync(Guid operationId)
         {
             var txMeta = await GetTransactionMetaAsync(operationId.ToString());
             var txBody = await GetTransactionBodyByIdAsync(operationId);

@@ -66,7 +66,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>A Task object that represents the asynchronous operation</returns>
         Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation);
         
-        Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId);
+        Task<TTransactionMeta> UpdateTransactionBroadcastStatusAsync(Guid operationId);
 
     }
 }

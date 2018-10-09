@@ -171,7 +171,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         "Transaction with specified operationId and signedTransaction has already been broadcasted"));
             }
 
-            var txMeta = await _transactionService.UpdateTrancactionBroadcastStatusAsync(broadcastTransactionRequest.OperationId);
+            var txMeta = await _transactionService.UpdateTransactionBroadcastStatusAsync(broadcastTransactionRequest.OperationId);
 
             if (txMeta.State == TransactionState.Failed && txMeta.Error.Equals("258: txn-mempool-conflict. Code:-26"))
             {
@@ -201,7 +201,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
                 if (txMeta != null)
                 {
-                    txMeta = await _transactionService.UpdateTrancactionBroadcastStatusAsync(new Guid(operationId));
+                    txMeta = await _transactionService.UpdateTransactionBroadcastStatusAsync(new Guid(operationId));
                     
                     BroadcastedTransactionState state;
                     BlockchainErrorCode? blockchainErrorCode = null;
