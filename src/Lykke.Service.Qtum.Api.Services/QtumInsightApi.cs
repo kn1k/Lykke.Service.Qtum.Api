@@ -21,16 +21,10 @@ namespace Lykke.Service.Qtum.Api.Services
     public class QtumInsightApi : IInsightApiService
     {
         private readonly string _url;
-        private readonly string _directApiUrl;
-        private readonly string _directApiUserName;
-        private readonly string _directApiPassword;
 
-        public QtumInsightApi(string url, string directApiUrl, string directApiUserName, string directApiPassword)
+        public QtumInsightApi(string url)
         {
             _url = url;
-            _directApiUrl = directApiUrl;
-            _directApiUserName = directApiUserName;
-            _directApiPassword = directApiPassword;
         }
 
         public async Task<IAddrTxs> GetAddrTxsAsync(BitcoinAddress address, int from = 0, int to = 50)
@@ -98,26 +92,18 @@ namespace Lykke.Service.Qtum.Api.Services
         /// <inheritdoc/>
         public async Task<(ITxId txId, IErrorResponse error)> TxSendAsync(IRawTx rawTx)
         {
-            // Due to strange issue with "unconfirmed" transactions broadcasted trough InsightAPI - used direct node to broadcast.
-
-            var client = new RestClient(_directApiUrl);
+            var client = new RestClient($"{_url}/tx/send");
             var request = new RestRequest(Method.POST);
 
-            var authInfo = Convert.ToBase64String(System.Text.Encoding.Default.GetBytes($"{_directApiUserName}:{_directApiPassword}"));
-            request.AddHeader("Authorization", "Basic " + authInfo);
-            request.AddHeader("Content-Type", "application/json");
-            request.AddJsonBody(new { jsonrpc = "1.0", id = "", method = "sendrawtransaction", @params = new string[] { rawTx.rawtx } });
+            var jRawTx = JObject.FromObject(rawTx);
 
-            var response = await client.ExecuteTaskAsync<TxResult>(request);
+            request.AddParameter("application/json; charset=utf-8", jRawTx.ToString(), ParameterType.RequestBody);
+
+            var response = await client.ExecuteTaskAsync<TxId>(request);
 
             if (response.IsSuccessful)
             {
-                if (response.Data.error != null)
-                {
-                    return (null, new ErrorResponse { error = $"{response.Data.error.message} ({response.Data.error.code})" });
-                }
-
-                return (new TxId { txid = response.Data.result }, null);
+                return (response.Data, null);
             }
             else
             {
@@ -125,7 +111,7 @@ namespace Lykke.Service.Qtum.Api.Services
                 {
                     return (null, new ErrorResponse {error = response.Content});
                 }
-                else if (response.ResponseStatus == ResponseStatus.Error)
+                if (response.ResponseStatus == ResponseStatus.Error)
                 {
                     throw new HttpRequestException("Network transport error (network is down, failed DNS lookup, etc)", response.ErrorException);
                 }

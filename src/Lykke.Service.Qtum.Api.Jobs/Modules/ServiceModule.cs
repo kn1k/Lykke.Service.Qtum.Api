@@ -98,11 +98,8 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
 
             builder.RegisterType<QtumInsightApi>()
                 .As<IInsightApiService>()
-                .WithParameter("url", _appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue)
-                .WithParameter("directApiUrl", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi).CurrentValue)
-                .WithParameter("directApiUserName", _appSettings.Nested(s => s.ExternalApi.DirectNodeApiUserName).CurrentValue)
-                .WithParameter("directApiPassword", _appSettings.Nested(s => s.ExternalApi.DirectNodeApiPassword).CurrentValue); ;
-
+                .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
+            
             builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>()
                 .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>();
                         
