@@ -20,6 +20,7 @@ namespace Lykke.Service.Qtum.Api.Services
     {
         private readonly Network _network;
         private readonly IInsightApiService _insightApiService;
+        private readonly IDirectNodeApiService _directNodeApiService;
         private readonly int _confirmationsCount;
 
         private const int RetryCount = 4;
@@ -28,10 +29,11 @@ namespace Lykke.Service.Qtum.Api.Services
 
         private readonly Policy _policy;
 
-        public BlockchainService(Network network, IInsightApiService insightApiService, IFeeService feeService, int confirmationsCount)
+        public BlockchainService(Network network, IInsightApiService insightApiService, IFeeService feeService, IDirectNodeApiService directNodeApiService, int confirmationsCount)
         {
             _network = network;
             _insightApiService = insightApiService;
+            _directNodeApiService = directNodeApiService;
             _confirmationsCount = confirmationsCount;
 
             _policy = Policy
@@ -102,12 +104,12 @@ namespace Lykke.Service.Qtum.Api.Services
         }
 
         /// <inheritdoc/>
-        public async Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction)
+        public async Task<(string txId, IErrorResponse error)> BroadcastSignedTransactionAsync(string signedTransaction)
         {
             var policyResult = _policy.ExecuteAsync(async () =>
             {
-                var result = await _insightApiService.TxSendAsync(new RawTx { rawtx = signedTransaction}); 
-                return (result.txId?.txid, result.error?.error);                          
+                var (txId, error) = await _directNodeApiService.TxSendAsync(new RawTx { rawtx = signedTransaction}); 
+                return (txId?.txid, error);                          
             });
 
             return await policyResult;
@@ -193,8 +195,9 @@ namespace Lykke.Service.Qtum.Api.Services
                 return await _insightApiService.GetUtxoAsync(ParseAddress(address));
             });
 
+            var confirmationsCount = _confirmationsCount <= 0 ? 1 : _confirmationsCount;
             return utxos
-                    .Where(p => p.Confirmations >= _confirmationsCount)
+                    .Where(p => p.Confirmations >= confirmationsCount)
                     .Select(source =>
                     {
                         return new Coin(

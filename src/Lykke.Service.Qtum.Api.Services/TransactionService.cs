@@ -126,14 +126,12 @@ namespace Lykke.Service.Qtum.Api.Services
 
         public async Task<bool> IsTransactionAlreadyBroadcastAsync(Guid operationId)
         {
-            var txMeta = await GetTransactionMetaAsync(operationId.ToString());
+            return IsTransactionAlreadyBroadcasted(await GetTransactionMetaAsync(operationId.ToString()));
+        }
 
-            if (txMeta != null
-                && (txMeta.State == TransactionState.Broadcasted
-                    || txMeta.State == TransactionState.Confirmed
-                    || txMeta.State == TransactionState.Failed
-                    || txMeta.State == TransactionState.BlockChainFailed
-                    || txMeta.State == TransactionState.Signed))
+        public bool IsTransactionAlreadyBroadcasted(TTransactionMeta txMeta)
+        {
+            if (txMeta != null && txMeta.State != TransactionState.NotSigned)
             {
                 return true;
             }
@@ -275,7 +273,7 @@ namespace Lykke.Service.Qtum.Api.Services
         {
             var txMeta = await GetTransactionMetaAsync(operationId.ToString());
 
-            if (await IsTransactionAlreadyBroadcastAsync(operationId))
+            if (IsTransactionAlreadyBroadcasted(txMeta))
             {
                 _log.Info(nameof(BroadcastSignedTransactionAsync),
                     JObject.FromObject(txMeta).ToString(),
@@ -287,11 +285,11 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 txMeta = new TTransactionMeta
                 {
-                    OperationId = operationId
+                    OperationId = operationId,
                 };
             }
 
-            TTransactionBody transactionBody = await GetTransactionBodyByIdAsync(operationId);
+            var transactionBody = await GetTransactionBodyByIdAsync(operationId);
             if (transactionBody == null)
             {
                 transactionBody = new TTransactionBody
@@ -299,20 +297,22 @@ namespace Lykke.Service.Qtum.Api.Services
                     OperationId = operationId
                 };
             }
-
             transactionBody.SignedTransaction = signedTransaction;
-
             await UpdateTransactionBodyAsync(transactionBody);
+
+            var tx = Transaction.Parse(signedTransaction, _blockchainService.GetNetwork());
 
             txMeta.State = TransactionState.Signed;
             txMeta.BroadcastTimestamp = DateTime.Now;
+            txMeta.TxId = tx.GetHash().ToString(); // TxId equals to tx hash
             await UpdateTransactionMeta(txMeta);
 
-            TTransactionObservation transactionObservation = new TTransactionObservation
+            var transactionObservation = new TTransactionObservation
             {
                 OperationId = operationId
             };
 
+            // TODO it's useless without job
             await CreateObservationAsync(transactionObservation);
             
             _log.Info(nameof(BroadcastSignedTransactionAsync),
@@ -322,7 +322,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return true;
         }
 
-        public async Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId)
+        public async Task<TTransactionMeta> UpdateTransactionBroadcastStatusAsync(Guid operationId)
         {
             var txMeta = await GetTransactionMetaAsync(operationId.ToString());
             var txBody = await GetTransactionBodyByIdAsync(operationId);
@@ -346,12 +346,18 @@ namespace Lykke.Service.Qtum.Api.Services
 
                     if (broadcactResult.error != null)
                     {
-                        txMeta.Error = broadcactResult.error;
-                        txMeta.State = TransactionState.Failed;
+                        if (broadcactResult.error.code == -27) //transaction already in block chain
+                        {
+                            txMeta.State = TransactionState.Broadcasted;
+                        }
+                        else
+                        {
+                            txMeta.Error = broadcactResult.error.message;
+                            txMeta.State = TransactionState.Failed;
+                        }
                     }
                     else
                     {
-                        txMeta.TxId = broadcactResult.txId;
                         txMeta.State = TransactionState.Broadcasted;
                     }
                 }
@@ -413,7 +419,7 @@ namespace Lykke.Service.Qtum.Api.Services
 
                             if (broadcactResult.error != null)
                             {
-                                txMeta.Error = broadcactResult.error;
+                                txMeta.Error = broadcactResult.error.message;
                                 txMeta.State = TransactionState.Failed;
                             }
                             else

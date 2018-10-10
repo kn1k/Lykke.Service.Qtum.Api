@@ -21,6 +21,13 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         Task<bool> IsTransactionAlreadyBroadcastAsync(Guid operationId);
 
         /// <summary>
+        /// Check is transaction already broacasted.
+        /// </summary>
+        /// <param name="operationId">Tx meta</param>
+        /// <returns>true if broadcasted.</returns>
+        bool IsTransactionAlreadyBroadcasted(TTransactionMeta txMeta);
+
+        /// <summary>
         /// Get new or exist unsigned transaction
         /// </summary>
         /// <param name="operationId">Operation Id</param>
@@ -66,7 +73,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// <returns>A Task object that represents the asynchronous operation</returns>
         Task<bool> RemoveTransactionObservationAsync(TTransactionObservation transactionObservation);
         
-        Task<TTransactionMeta> UpdateTrancactionBroadcastStatusAsync(Guid operationId);
+        Task<TTransactionMeta> UpdateTransactionBroadcastStatusAsync(Guid operationId);
 
     }
 }
