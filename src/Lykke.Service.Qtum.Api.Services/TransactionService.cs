@@ -219,7 +219,7 @@ namespace Lykke.Service.Qtum.Api.Services
             builder.SendFees(calculatedFee);
 
             var tx = builder.BuildTransaction(false);
-            var usedCoins = tx.Inputs.Select(input => coins.First(o => o.Outpoint == input.PrevOut)).ToArray();            
+            var usedCoins = tx.Inputs.Select(input => coins.First(o => o.Outpoint == input.PrevOut)).ToArray();
 
             return Serializer.ToString<(Transaction, ICoin[])>((tx, usedCoins));
         }
