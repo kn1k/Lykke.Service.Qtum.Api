@@ -49,7 +49,7 @@ ExternalApi:
         Password:
             settings-key: "QtumApiService-DirectNodeApiPassword"
             types:
-                - Tag
+                - Secret
     
 MonitoringServiceClient:
     MonitoringServiceUrl:
