@@ -2,6 +2,8 @@
 {
     public interface IErrorResponse
     {
-        string error { get; set; }
+        string message { get; set; }
+
+        int? code { get; set; }
     }
 }

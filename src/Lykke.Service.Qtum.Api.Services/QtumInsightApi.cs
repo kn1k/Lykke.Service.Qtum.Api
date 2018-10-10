@@ -109,7 +109,7 @@ namespace Lykke.Service.Qtum.Api.Services
             {
                 if (response.StatusCode == HttpStatusCode.BadRequest)
                 {
-                    return (null, new ErrorResponse {error = response.Content});
+                    return (null, new ErrorResponse {message = response.Content});
                 }
                 if (response.ResponseStatus == ResponseStatus.Error)
                 {

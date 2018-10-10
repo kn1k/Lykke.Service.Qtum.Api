@@ -99,10 +99,22 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
             builder.RegisterType<QtumInsightApi>()
                 .As<IInsightApiService>()
                 .WithParameter(TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
-            
+
+            builder.RegisterType<DirectNodeApiService>()
+                .As<IDirectNodeApiService>()
+                .WithParameter("url", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi.Url).CurrentValue)
+                .WithParameter("username", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi.UserName).CurrentValue)
+                .WithParameter("password", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi.Password).CurrentValue);
+
             builder.RegisterType<TransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>()
                 .As<ITransactionService<TransactionBody, TransactionMeta, TransactionObservation, SpentOutputEntity>>();
-                        
+
+            builder.RegisterType<FeeService>()
+                .As<IFeeService>()
+                .WithParameter("feePerByte", _appSettings.Nested(s => s.FeeSettings.FeePerByte).CurrentValue)
+                .WithParameter("minFeeValueSatoshi", _appSettings.Nested(s => s.FeeSettings.MinFeeValueSatoshi).CurrentValue)
+                .WithParameter("maxFeeValueSatoshi", _appSettings.Nested(s => s.FeeSettings.MaxFeeValueSatoshi).CurrentValue);
+
             //Jobs setup 
             builder.RegisterType<BalanceRefreshJob>()
                 .As<IStartable>()
@@ -114,11 +126,7 @@ namespace Lykke.Service.Qtum.Api.Jobs.Modules
                 .WithParameter(TypedParameter.From(TimeSpan.FromSeconds(10)))
                 .SingleInstance();
             
-            builder.RegisterType<FeeService>()
-                .As<IFeeService>()
-                .WithParameter("feePerByte", _appSettings.Nested(s => s.FeeSettings.FeePerByte).CurrentValue)
-                .WithParameter("minFeeValueSatoshi", _appSettings.Nested(s => s.FeeSettings.MinFeeValueSatoshi).CurrentValue)
-                .WithParameter("maxFeeValueSatoshi", _appSettings.Nested(s => s.FeeSettings.MaxFeeValueSatoshi).CurrentValue);
+            
         }
     }
 }

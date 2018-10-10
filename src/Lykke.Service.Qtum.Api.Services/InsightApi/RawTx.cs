@@ -2,10 +2,8 @@
 
 namespace Lykke.Service.Qtum.Api.Services.InsightApi
 {
-    public class RawTx : IRawTx, IErrorResponse
+    public class RawTx : IRawTx
     {
         public string rawtx { get; set; }
-        
-        public string error { get; set; }
     }
 }

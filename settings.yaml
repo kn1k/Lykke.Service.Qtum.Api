@@ -37,6 +37,19 @@ ExternalApi:
         settings-key: "QtumApiService-QtumInsightApi"
         types:
             - Tag
+    DirectNodeApi:
+        Url:
+            settings-key: "QtumApiService-DirectNodeApiUrl"
+            types:
+                - Tag
+        UserName:
+            settings-key: "QtumApiService-DirectNodeApiUserName"
+            types:
+                - Tag
+        Password:
+            settings-key: "QtumApiService-DirectNodeApiPassword"
+            types:
+                - Tag
     
 MonitoringServiceClient:
     MonitoringServiceUrl:

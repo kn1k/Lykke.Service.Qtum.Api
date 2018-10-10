@@ -80,7 +80,7 @@ namespace Lykke.Service.Qtum.Api.Core.Services
         /// </summary>
         /// <param name="signedTransaction">Signed transaction</param>
         /// <returns>Broadcast result (txId or error)</returns>
-        Task<(string txId, string error)> BroadcastSignedTransactionAsync(string signedTransaction);
+        Task<(string txId, IErrorResponse error)> BroadcastSignedTransactionAsync(string signedTransaction);
 
     }
     

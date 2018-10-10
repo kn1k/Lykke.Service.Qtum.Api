@@ -102,7 +102,13 @@ namespace Lykke.Service.Qtum.Api.Modules
                 .As<IInsightApiService>()
                 .WithParameter(
                     TypedParameter.From(_appSettings.Nested(s => s.ExternalApi.QtumInsightApi).CurrentValue));
-            
+
+            builder.RegisterType<DirectNodeApiService>()
+                .As<IDirectNodeApiService>()
+                .WithParameter("url", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi.Url).CurrentValue)
+                .WithParameter("username", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi.UserName).CurrentValue)
+                .WithParameter("password", _appSettings.Nested(s => s.ExternalApi.DirectNodeApi.Password).CurrentValue);
+
             builder.RegisterType<FeeService>()
                 .As<IFeeService>()
                 .WithParameter("feePerByte", _appSettings.Nested(s => s.FeeSettings.FeePerByte).CurrentValue)

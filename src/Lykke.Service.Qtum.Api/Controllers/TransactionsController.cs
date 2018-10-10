@@ -173,15 +173,15 @@ namespace Lykke.Service.Qtum.Api.Controllers
 
             var txMeta = await _transactionService.UpdateTransactionBroadcastStatusAsync(broadcastTransactionRequest.OperationId);
 
-            if (txMeta.State == TransactionState.Failed && txMeta.Error.Equals("258: txn-mempool-conflict. Code:-26"))
+            if (txMeta.State == TransactionState.Failed)
             {
-                return StatusCode((int) HttpStatusCode.BadRequest,
-                    ErrorResponse.Create(
-                        "buildingShouldBeRepeated"));
+                return StatusCode((int) HttpStatusCode.BadRequest, ErrorResponse.Create("buildingShouldBeRepeated"));
             }
+
             _log.Info(nameof(BroadcastSignedTransactionAsync),
                 JObject.FromObject(broadcastTransactionRequest).ToString(),
                 $"Transaction broadcasted {broadcastTransactionRequest.OperationId}");
+
             return Ok();
         }
 
@@ -214,16 +214,10 @@ namespace Lykke.Service.Qtum.Api.Controllers
                         case TransactionState.Failed:
                         case TransactionState.BlockChainFailed:
                             state = BroadcastedTransactionState.Failed;
-                            //TODO: support other code
-
-                            if (txMeta.Error.Equals("258: txn-mempool-conflict. Code:-26"))
-                            {
-                                blockchainErrorCode = BlockchainErrorCode.BuildingShouldBeRepeated;
-                            }
-                            else
-                            {
-                                blockchainErrorCode = BlockchainErrorCode.Unknown; 
-                            }
+                            
+                            //TODO: support different codes from node api
+                            blockchainErrorCode = BlockchainErrorCode.BuildingShouldBeRepeated;
+                            
                             break;
                         default:
                             state = BroadcastedTransactionState.InProgress;

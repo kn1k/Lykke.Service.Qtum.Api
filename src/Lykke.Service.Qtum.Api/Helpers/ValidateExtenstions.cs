@@ -119,6 +119,7 @@ namespace Lykke.Service.Qtum.Api.Helpers
         /// </summary>
         /// <param name="self">Validation information <see cref="ModelStateDictionary"/></param>
         /// <param name="broadcastTransactionRequest"><see cref="BroadcastTransactionRequest"/></param>
+        /// <param name="network"></param>
         /// <returns>Is broadcasted signed transaction valid</returns>
         public static bool IsValid(this ModelStateDictionary self, BroadcastTransactionRequest broadcastTransactionRequest, Network network)
         {
