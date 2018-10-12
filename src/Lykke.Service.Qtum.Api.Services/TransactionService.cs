@@ -322,7 +322,7 @@ namespace Lykke.Service.Qtum.Api.Services
             return true;
         }
 
-        public async Task<TTransactionMeta> UpdateTransactionBroadcastStatusAsync(Guid operationId)
+        public async Task<TTransactionMeta> UpdateTransactionBroadcastStatusAsync(Guid operationId, bool check = false)
         {
             var txMeta = await GetTransactionMetaAsync(operationId.ToString());
             var txBody = await GetTransactionBodyByIdAsync(operationId);
@@ -364,23 +364,33 @@ namespace Lykke.Service.Qtum.Api.Services
                 
                 if (txMeta.State == TransactionState.Broadcasted)
                 {
-                    var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
-
-                    if (txInfo != null)
+                    try
                     {
-                        var confirmationsCount = _confirmationsCount <= 0 ? 1 : _confirmationsCount; // While transaction is unconfirmed, txInfo.Blockheight is incorrect (-1)
-                        if (txInfo.Confirmations >= confirmationsCount)
+                        var txInfo = await _blockchainService.GetTransactionInfoByIdAsync(txMeta.TxId);
+
+                        if (txInfo != null)
                         {
-                            txMeta.State = TransactionState.Confirmed;
-                            txMeta.Hash = txInfo.Blockhash;
-                            txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
-                            txMeta.BlockCount = txInfo.Blockheight;
+                            var confirmationsCount = _confirmationsCount <= 0 ? 1 : _confirmationsCount; // While transaction is unconfirmed, txInfo.Blockheight is incorrect (-1)
+                            if (txInfo.Confirmations >= confirmationsCount)
+                            {
+                                txMeta.State = TransactionState.Confirmed;
+                                txMeta.Hash = txInfo.Blockhash;
+                                txMeta.CompleteTimestamp = UnixTimeHelper.UnixTimeStampToDateTime(txInfo.Blocktime);
+                                txMeta.BlockCount = txInfo.Blockheight;
+                            }
+                        }
+                        else
+                        {
+                            txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
+                            txMeta.State = TransactionState.Failed;
                         }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        txMeta.Error = $"Tx not found by id :{txMeta.TxId}";
-                        txMeta.State = TransactionState.Failed;
+                        if (check)
+                        {
+                            _log.Warning($"unable to get tx info for operation: {operationId}, txid: {txMeta.TxId}", e);
+                        }
                     }
                 }
 
@@ -389,7 +399,7 @@ namespace Lykke.Service.Qtum.Api.Services
             }
             catch (Exception e)
             {
-                _log.Error($"failed to update tx info for operation: {operationId}", e);
+                _log.Error(e, $"failed to update tx info for operation: {operationId}");
                 return txMeta;
             }
         }

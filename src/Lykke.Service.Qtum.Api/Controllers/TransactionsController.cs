@@ -201,7 +201,7 @@ namespace Lykke.Service.Qtum.Api.Controllers
                 var txMeta = await _transactionService.GetTransactionMetaAsync(operationId);
                 if (txMeta != null)
                 {
-                    txMeta = await _transactionService.UpdateTransactionBroadcastStatusAsync(new Guid(operationId));
+                    txMeta = await _transactionService.UpdateTransactionBroadcastStatusAsync(new Guid(operationId), true);
                     
                     BroadcastedTransactionState state;
                     BlockchainErrorCode? blockchainErrorCode = null;
